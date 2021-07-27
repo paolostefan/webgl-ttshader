@@ -1,9 +1,14 @@
 (function () {
-  let canvas = document.querySelector("#c");
+  const errorContainer = document.querySelector("#errormsg");
+  const canvas = document.querySelector("#c");
   let gl = canvas.getContext("webgl2");
   if (!gl) {
     alert("WebGL2 not available");
     return;
+  }
+
+  function displayError(msg) {
+    errorContainer.innerHTML = msg;
   }
 
   console.log("Got WebGL2");
@@ -23,7 +28,8 @@
     uniform vec3 a, b, c, d;
 
     void main(){
-        outColor = vec4(0.3, 1, 0.35, 1);
+      float PI = 3.141592653589;
+      outColor = vec4(a + b * cos(2.0f*PI*(c*gl_FragCoord.x + d)), 1);
     }
     `;
 
@@ -35,7 +41,8 @@
     if (success) {
       return shader;
     }
-    console.log("Cannot create WebGL shader", gl.getShaderInfoLog(shader));
+    console.log("Cannot create WebGL shader");
+    displayError("Cannot create shader\n" + gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
   }
 
@@ -93,13 +100,24 @@
   gl.clearColor(0, 0, 0, 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  var resolutionUniformLocation = gl.getUniformLocation(
+  const resolutionUniformLocation = gl.getUniformLocation(
     program,
     "u_resolution"
   );
+  const varBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, varBuffer);
+  const abcd = new Float32Array(12);
+  gl.bufferData(gl.ARRAY_BUFFER, abcd, gl.DYNAMIC_DRAW, 0, abcd.length * abcd.BYTES_PER_ELEMENT);
+  //           (  target       , srcData, usage       , srcOffset, lengthInBytes               )
+  
   gl.useProgram(program);
-  gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
   gl.bindVertexArray(vao);
+
+  gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+  const a = { x: 0, y: 0, z: 0 };
+  const b = { x: 0, y: 0, z: 0 };
+  const c = { x: 0, y: 0, z: 0 };
+  const d = { x: 0, y: 0, z: 0 };
 
   const primitiveType = gl.TRIANGLES;
   offset = 0;
@@ -109,32 +127,27 @@
   // Dat.gui
 
   const dat = require("dat.gui");
-  const gui = new dat.GUI({name:'Pippo'});
-
-  const a = { x: 0, y: 0, z: 0 };
-  const b = { x: 0, y: 0, z: 0 };
-  const c = { x: 0, y: 0, z: 0 };
-  const d = { x: 0, y: 0, z: 0 };
+  const gui = new dat.GUI({ name: "Pippo" });
 
   const folderA = gui.addFolder("a");
-  folderA.add(a, 'x', 0, 1.0, 0.033);
-  folderA.add(a, 'y', 0, 1.0, 0.033);
-  folderA.add(a, 'z', 0, 1.0, 0.033);
+  folderA.add(a, "x", 0, 1.0, 0.033);
+  folderA.add(a, "y", 0, 1.0, 0.033);
+  folderA.add(a, "z", 0, 1.0, 0.033);
 
   const folderB = gui.addFolder("b");
-  folderB.add(b, 'x', 0, 1.0, 0.033);
-  folderB.add(b, 'y', 0, 1.0, 0.033);
-  folderB.add(b, 'z', 0, 1.0, 0.033);
+  folderB.add(b, "x", 0, 1.0, 0.033);
+  folderB.add(b, "y", 0, 1.0, 0.033);
+  folderB.add(b, "z", 0, 1.0, 0.033);
 
   const folderC = gui.addFolder("c");
-  folderC.add(c, 'x', 0, 1.0, 0.033);
-  folderC.add(c, 'y', 0, 1.0, 0.033);
-  folderC.add(c, 'z', 0, 1.0, 0.033);
+  folderC.add(c, "x", 0, 1.0, 0.033);
+  folderC.add(c, "y", 0, 1.0, 0.033);
+  folderC.add(c, "z", 0, 1.0, 0.033);
 
   const folderD = gui.addFolder("d");
-  folderD.add(d, 'x', 0, 1.0, 0.033);
-  folderD.add(d, 'y', 0, 1.0, 0.033);
-  folderD.add(d, 'z', 0, 1.0, 0.033);
+  folderD.add(d, "x", 0, 1.0, 0.033);
+  folderD.add(d, "y", 0, 1.0, 0.033);
+  folderD.add(d, "z", 0, 1.0, 0.033);
 
   gui.open();
 })();
