@@ -104,12 +104,17 @@
     program,
     "u_resolution"
   );
-  const varBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, varBuffer);
-  const abcd = new Float32Array(12);
-  gl.bufferData(gl.ARRAY_BUFFER, abcd, gl.DYNAMIC_DRAW, 0, abcd.length * abcd.BYTES_PER_ELEMENT);
-  //           (  target       , srcData, usage       , srcOffset, lengthInBytes               )
-  
+  const aUniformLocation = gl.getUniformLocation(program, "a");
+  const bUniformLocation = gl.getUniformLocation(program, "b");
+  const cUniformLocation = gl.getUniformLocation(program, "c");
+  const dUniformLocation = gl.getUniformLocation(program, "d");
+  // todo dat.gui onchange
+  // const varBuffer = gl.createBuffer();
+  // gl.bindBuffer(gl.ARRAY_BUFFER, varBuffer);
+  // const abcd = new Float32Array(12);
+  // gl.bufferData(gl.ARRAY_BUFFER, abcd, gl.DYNAMIC_DRAW, 0, abcd.length * abcd.BYTES_PER_ELEMENT);
+  // //           (  target       , srcData, usage       , srcOffset, lengthInBytes               )
+
   gl.useProgram(program);
   gl.bindVertexArray(vao);
 
