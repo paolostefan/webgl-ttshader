@@ -15,7 +15,6 @@
 
   const vertexShaderSrc = `#version 300 es
     in vec4 a_position;
-    uniform vec2 u_resolution;
     
     void main() {
         gl_Position = a_position;
@@ -26,10 +25,12 @@
     precision highp float;
     out vec4 outColor;
     uniform vec3 a, b, c, d;
+    uniform vec2 u_resolution;
 
     void main(){
       float PI = 3.141592653589;
-      outColor = vec4(a + b * cos(2.0f*PI*(c*gl_FragCoord.x + d)), 1);
+      outColor = vec4(a + b * cos(2.0f*PI*(c*gl_FragCoord.x/u_resolution.x + d)), 1);
+      // outColor = vec4(gl_FragCoord.xy/u_resolution, 0,1);
     }
     `;
 
@@ -108,51 +109,87 @@
   const bUniformLocation = gl.getUniformLocation(program, "b");
   const cUniformLocation = gl.getUniformLocation(program, "c");
   const dUniformLocation = gl.getUniformLocation(program, "d");
-  // todo dat.gui onchange
-  // const varBuffer = gl.createBuffer();
-  // gl.bindBuffer(gl.ARRAY_BUFFER, varBuffer);
-  // const abcd = new Float32Array(12);
-  // gl.bufferData(gl.ARRAY_BUFFER, abcd, gl.DYNAMIC_DRAW, 0, abcd.length * abcd.BYTES_PER_ELEMENT);
-  // //           (  target       , srcData, usage       , srcOffset, lengthInBytes               )
 
   gl.useProgram(program);
   gl.bindVertexArray(vao);
-
+  
   gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-  const a = { x: 0, y: 0, z: 0 };
-  const b = { x: 0, y: 0, z: 0 };
-  const c = { x: 0, y: 0, z: 0 };
-  const d = { x: 0, y: 0, z: 0 };
-
+  
+  const a = { x: 0.5, y: 0.5, z: 0.5 };
+  const b = { x: 1.0, y: 0, z: 0 };
+  const c = { x: 0, y: 1.0, z: 0 };
+  const d = { x: 0, y: 0, z: 1.0 };
+  
+  gl.uniform3f(aUniformLocation, a.x, a.y, a.z);
+  gl.uniform3f(bUniformLocation, b.x, b.y, b.z);
+  gl.uniform3f(cUniformLocation, c.x, c.y, c.z);
+  gl.uniform3f(dUniformLocation, d.x, d.y, d.z);
+  
   const primitiveType = gl.TRIANGLES;
   offset = 0;
   const count = 6;
   gl.drawArrays(primitiveType, offset, count);
 
+  function updateUniform(glUniform, jsVar) {
+    return function(){
+      gl.clearColor(.3, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.useProgram(program);
+      gl.bindVertexArray(vao);
+      // !!!!!
+      gl.uniform3f(glUniform, jsVar.x, jsVar.y, jsVar.z);
+      gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+      gl.drawArrays(primitiveType, offset, count);
+    }
+  }
+  
   // Dat.gui
-
   const dat = require("dat.gui");
   const gui = new dat.GUI({ name: "Pippo" });
 
   const folderA = gui.addFolder("a");
-  folderA.add(a, "x", 0, 1.0, 0.033);
-  folderA.add(a, "y", 0, 1.0, 0.033);
-  folderA.add(a, "z", 0, 1.0, 0.033);
+  folderA
+    .add(a, "x", 0, 1.0, 0.033333333)
+    .onChange(updateUniform(aUniformLocation, a));
+  folderA
+    .add(a, "y", 0, 1.0, 0.033333333)
+    .onChange(updateUniform(aUniformLocation, a));
+  folderA
+    .add(a, "z", 0, 1.0, 0.033333333)
+    .onChange(updateUniform(aUniformLocation, a));
 
   const folderB = gui.addFolder("b");
-  folderB.add(b, "x", 0, 1.0, 0.033);
-  folderB.add(b, "y", 0, 1.0, 0.033);
-  folderB.add(b, "z", 0, 1.0, 0.033);
+  folderB
+    .add(b, "x", 0, 1.0, 0.033333333)
+    .onChange(updateUniform(bUniformLocation, b));
+  folderB
+    .add(b, "y", 0, 1.0, 0.033333333)
+    .onChange(updateUniform(bUniformLocation, b));
+  folderB
+    .add(b, "z", 0, 1.0, 0.033333333)
+    .onChange(updateUniform(bUniformLocation, b));
 
   const folderC = gui.addFolder("c");
-  folderC.add(c, "x", 0, 1.0, 0.033);
-  folderC.add(c, "y", 0, 1.0, 0.033);
-  folderC.add(c, "z", 0, 1.0, 0.033);
+  folderC
+    .add(c, "x", 0, 1.0, 0.033)
+    .onChange(updateUniform(cUniformLocation, c));
+  folderC
+    .add(c, "y", 0, 1.0, 0.033)
+    .onChange(updateUniform(cUniformLocation, c));
+  folderC
+    .add(c, "z", 0, 1.0, 0.033)
+    .onChange(updateUniform(cUniformLocation, c));
 
   const folderD = gui.addFolder("d");
-  folderD.add(d, "x", 0, 1.0, 0.033);
-  folderD.add(d, "y", 0, 1.0, 0.033);
-  folderD.add(d, "z", 0, 1.0, 0.033);
+  folderD
+    .add(d, "x", 0, 1.0, 0.033)
+    .onChange(updateUniform(dUniformLocation, d));
+  folderD
+    .add(d, "y", 0, 1.0, 0.033)
+    .onChange(updateUniform(dUniformLocation, d));
+  folderD
+    .add(d, "z", 0, 1.0, 0.033)
+    .onChange(updateUniform(dUniformLocation, d));
 
   gui.open();
 })();
