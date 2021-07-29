@@ -33,13 +33,12 @@ uniform vec2 mouse;
 #define P4Y -0.200014062
 
 int mandel(vec2 c){
-  // outColor = vec4(fract(c.x), fract(c.y), 0.0, 1.0);
   // Check cardioide principale
-  // float cmod = length(c);
-  // cmod = cmod*cmod;
-  // if (cmod*(8.0*cmod -3.0) < 3.0/32.0 - c.x){
-  //   return -1;
-  // }
+  float cmod = length(c);
+  cmod = cmod*cmod;
+  if (cmod*(8.0*cmod -3.0) < 3.0/32.0 - c.x){
+    return -1;
+  }
 
   vec2 z = c;
   float zr_tmp;
