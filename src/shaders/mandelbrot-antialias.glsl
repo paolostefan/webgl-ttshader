@@ -13,11 +13,11 @@ uniform vec2 u_resolution;
 uniform vec2 mouse;
 
 #define PI 3.141592653589
-#define MAXITER 768
-
+#define MAXITER 512
+// Attiva/disattiva l'AA
 #define ANTIALIAS 1
 
-// Punti per il calcolo dell'AA
+// Numero di punti per il calcolo dell'AA
 #define SAMPLING_SIZE 4
 
 #define P1X 0.200014062

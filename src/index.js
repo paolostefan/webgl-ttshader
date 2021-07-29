@@ -40,14 +40,6 @@ import fragmentShaderSrc from "./shaders/mandelbrot-antialias.glsl";
     errorContainer.innerHTML = msg;
   }
 
-  function drawScene() {
-    gl.clearColor(0.3, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(program);
-    gl.bindVertexArray(vao);
-    gl.drawArrays(primitiveType, offset, count);
-  }
-
   function uniformLoc(name) {
     return gl.getUniformLocation(program, name);
   }
@@ -78,6 +70,17 @@ import fragmentShaderSrc from "./shaders/mandelbrot-antialias.glsl";
     };
   }
 
+  function drawScene() {
+    const primitiveType = gl.TRIANGLES;
+    const offset = 0;
+    const count = 6;
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(program);
+    gl.bindVertexArray(vao);
+    gl.drawArrays(primitiveType, offset, count);
+  }
+
   const vertexShaderSrc = `#version 300 es
     in vec4 a_position;
     
@@ -93,10 +96,12 @@ import fragmentShaderSrc from "./shaders/mandelbrot-antialias.glsl";
   }
 
   console.log("Created vertex and fragment shaders");
+
   const program = createProgram(vertexShader, fragmentShader);
   if (!program) {
     return;
   }
+
   console.log("Created program");
 
   const positionAttribLocation = gl.getAttribLocation(program, "a_position");
@@ -114,7 +119,7 @@ import fragmentShaderSrc from "./shaders/mandelbrot-antialias.glsl";
   const type = gl.FLOAT; // the data is 32bit floats
   const normalize = false; // don't normalize the data
   const stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
-  let offset = 0; // start at the beginning of the buffer
+  const offset = 0; // start at the beginning of the buffer
   gl.vertexAttribPointer(
     positionAttribLocation,
     size,
@@ -125,20 +130,14 @@ import fragmentShaderSrc from "./shaders/mandelbrot-antialias.glsl";
   );
 
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.clearColor(0, 0, 0, 1);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  gl.useProgram(program);
-  gl.bindVertexArray(vao);
-
-  const res = { vside: 0.176, lower_left: { x: -.681, y: -0.711 } };
-
+  const res = { vside: 0.176, lower_left: { x: -0.681, y: -0.711 } };
+  
   const a = { x: 0.17, y: 0.5, z: 0.5 };
-  const b = { x: .83, y: 0.5, z: 0.5 };
+  const b = { x: 0.83, y: 0.5, z: 0.5 };
   const c = { x: 6, y: 5.4, z: 2.2 };
   const d = { x: 0.46, y: 0.68, z: 0.98 };
-
-
+  
+  drawScene();
   // Starting bind of uniform vars
   gl.uniform2f(uniformLoc("u_resolution"), gl.canvas.width, gl.canvas.height);
   gl.uniform1f(uniformLoc("vside"), res.vside);
@@ -147,12 +146,8 @@ import fragmentShaderSrc from "./shaders/mandelbrot-antialias.glsl";
   gl.uniform3f(uniformLoc("b"), b.x, b.y, b.z);
   gl.uniform3f(uniformLoc("c"), c.x, c.y, c.z);
   gl.uniform3f(uniformLoc("d"), d.x, d.y, d.z);
-
-  const primitiveType = gl.TRIANGLES;
-  offset = 0;
-  const count = 6;
-  gl.drawArrays(primitiveType, offset, count);
-
+  
+  drawScene();
   // Dat.gui
   const gui = new dat.GUI({ name: "Pippo" });
 
