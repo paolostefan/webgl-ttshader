@@ -1,6 +1,6 @@
 {
   "name": "webgl-ttshader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Boilerplate for 2 triangles shader",
   "private": true,
   "scripts": {

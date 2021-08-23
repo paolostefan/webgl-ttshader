@@ -16,7 +16,12 @@ export class Raymarcher extends glCapsule {
     return shader;
   }
 
-
+  /**
+   * Da usare come callback negli eventi di dat.gui
+   *
+   * @param name Nome della variabile Uniform1F
+   * @returns function
+   */
   updateUniform1f(name: string) {
     return (value: number) => {
       this.gl.uniform1f(this.uniformLoc(name), value);
@@ -54,9 +59,57 @@ export class Raymarcher extends glCapsule {
     this.gl.bindVertexArray(this.vao);
     this.gl.drawArrays(primitiveType, offset, count);
 
+    // Aggiorna le variabili uniform
+    this.gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
+
     window.requestAnimationFrame((m) => {
       this.drawScene(m);
     });
+  }
+
+  /**
+   * Assegna i valori iniziali alle variabili Uniform utilizzate dallo shader
+   */
+  bindUniforms() {
+    this.gl.uniform1f(this.uniformLoc("u_time"), 0);
+    this.gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
+
+    this.gl.uniform2f(
+      this.uniformLoc("u_resolution"),
+      this.canvas.width,
+      this.canvas.height
+    );
+
+    this.gl.uniform1f(this.uniformLoc("vside"), this.parameters.vside);
+    this.gl.uniform2f(
+      this.uniformLoc("lower_left"),
+      this.parameters.lower_left.x,
+      this.parameters.lower_left.y
+    );
+    this.gl.uniform3f(
+      this.uniformLoc("a"),
+      this.parameters.a.x,
+      this.parameters.a.y,
+      this.parameters.a.z
+    );
+    this.gl.uniform3f(
+      this.uniformLoc("b"),
+      this.parameters.b.x,
+      this.parameters.b.y,
+      this.parameters.b.z
+    );
+    this.gl.uniform3f(
+      this.uniformLoc("c"),
+      this.parameters.c.x,
+      this.parameters.c.y,
+      this.parameters.c.z
+    );
+    this.gl.uniform3f(
+      this.uniformLoc("d"),
+      this.parameters.d.x,
+      this.parameters.d.y,
+      this.parameters.d.z
+    );
   }
 
   doTheJob() {
@@ -137,46 +190,14 @@ export class Raymarcher extends glCapsule {
     this.drawScene(0);
 
     // Starting bind of uniform vars
-    this.gl.uniform2f(
-      this.uniformLoc("u_resolution"),
-      this.canvas.width,
-      this.canvas.height
-    );
-    this.gl.uniform1f(this.uniformLoc("vside"), this.parameters.vside);
-    this.gl.uniform2f(
-      this.uniformLoc("lower_left"),
-      this.parameters.lower_left.x,
-      this.parameters.lower_left.y
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("a"),
-      this.parameters.a.x,
-      this.parameters.a.y,
-      this.parameters.a.z
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("b"),
-      this.parameters.b.x,
-      this.parameters.b.y,
-      this.parameters.b.z
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("c"),
-      this.parameters.c.x,
-      this.parameters.c.y,
-      this.parameters.c.z
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("d"),
-      this.parameters.d.x,
-      this.parameters.d.y,
-      this.parameters.d.z
-    );
+    this.bindUniforms();
 
     // Dat.gui
     const gui = new dat.GUI({ name: "Gianfranco" });
 
-    gui.add(this.parameters, "fullscreen").onChange(this.toggleFullscreen.bind(this));
+    gui
+      .add(this.parameters, "fullscreen")
+      .onChange(this.toggleFullscreen.bind(this));
 
     const folderRes = gui.addFolder("Vertical side screen size");
     folderRes

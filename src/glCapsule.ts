@@ -2,12 +2,12 @@ export abstract class glCapsule {
   public errorContainer: any;
   protected canvas: any;
   public gl;
-  public parameters: {[key:string]:any};
+  public parameters: { [key: string]: any };
 
-  protected program:any;
-  protected vao:any;
+  protected program: any;
+  protected vao: any;
 
-  abstract doTheJob():void;
+  abstract doTheJob(): void;
 
   constructor() {
     this.errorContainer = document.querySelector("#errormsg");
@@ -15,16 +15,26 @@ export abstract class glCapsule {
     this.gl = this.canvas.getContext("webgl2");
     if (!this.gl) {
       const msg =
-        "Fatal error: WebGL2 not available. Please check your browser's compatibility.";
+      "Fatal error: WebGL2 not available. Please check your browser's compatibility.";
       alert("WebGL2 not available");
       this.displayError(msg);
       throw new Error(msg);
     }
     console.log("Got WebGL2");
+
+    this.canvas.addEventListener("mousemove", this.updateMouseCoords.bind(this));
   }
 
   displayError(msg: string) {
     this.errorContainer.innerHTML = msg;
+  }
+
+  updateMouseCoords(event: { clientX: number; clientY: number }) {
+    this.gl.uniform2f(
+      this.uniformLoc("u_mouse"),
+      event.clientX,
+      event.clientY
+    );
   }
 
   uniformLoc(name: string) {
@@ -64,5 +74,4 @@ export abstract class glCapsule {
       this.canvas.height
     );
   }
-
 }

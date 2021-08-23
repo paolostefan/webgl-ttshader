@@ -3,62 +3,41 @@
 precision highp float;
 out vec4 outColor;
 
-// Vertical side
-uniform float vside;
-// Lower left corner coords
-uniform vec2 lower_left;
-
-uniform vec3 a, b, c, d;
 uniform vec2 u_resolution;
-uniform vec2 mouse;
+// Tempo in millisecondi
+uniform float u_time;
+uniform vec2 u_mouse;
 
 #define PI 3.141592653589
+#define VP_HEIGHT 2.0
+#define FOCAL_LENGTH 1.0
 
+vec3 horizon = vec3(.99,.97,.97);
+vec3 zenit = vec3(.44,.75,1.0);
+vec3 nadir = vec3(.5,.3,.0);
 
 /**
- * Interpola t fra 0 e MAXITER
- *
- * http://192.168.1.2:9966/www/articles/palettes/palettes.htm
+ * Colore del cielo
  */
-vec3 col(int t){
-  // vec3 a = vec3(0.5);
-  // vec3 b = vec3(0.5);
-  // vec3 c = vec3(2.0,1.0,1.2);
-  // vec3 d = vec3(0.5, 0.55, 0.35);
-  float norm_t = sqrt(float(t)/float(MAXITER));
-
-  return a + b * cos(2.0 * PI * (c * norm_t + d));
+vec4 sky(vec3 direction) {
+  vec3 normal = normalize(direction);
+  
+  return normal.y>=0.0? vec4(mix(horizon, zenit, normal.y), 1): vec4(mix(horizon, nadir, -normal.y), 1);
 }
 
-void main(){
-  // vside = vertical dimension
-  float scale = vside/u_resolution.y;
-  vec2 c;
-  int escaped;
+void main() {
+  // https://raytracing.github.io/books/RayTracingInOneWeekend.html#rays,asimplecamera,andbackground/sendingraysintothescene
+  float aspect = u_resolution.x / u_resolution.y;
+  float vp_width = VP_HEIGHT * aspect;
 
-#if ANTIALIAS
-  vec2 displace[SAMPLING_SIZE];
-  displace[0] = vec2(P1X, P1Y);
-  displace[1] = vec2(P2X, P2Y);
-  displace[2] = vec2(P3X, P3Y);
-  displace[3] = vec2(P4X, P4Y);
-  vec3 color_ = vec3(0.0);
-  for(int i=0; i<SAMPLING_SIZE; i++){
-    c = lower_left + scale*vec2(gl_FragCoord.x + displace[i].x, gl_FragCoord.y + displace[i].y);
-    escaped = mandel(c);
-    if (escaped != -1){
-      color_ += col(escaped);
-    }
-  }
-  outColor = vec4(color_/float(SAMPLING_SIZE),1.0);
-#else
-  c = lower_left + vec2(scale*gl_FragCoord);
-  escaped = mandel(c);
-  if (escaped == -1){
-    outColor = vec4(vec3(0.0), 1.0);
-  } else {
-    outColor = vec4(col(escaped), 1.0);
-  }
-#endif
+  vec3 origin = vec3(0, 0, 0);
+  vec3 right = vec3(vp_width, 0, 0);
+  vec3 high = vec3(0, VP_HEIGHT, 0);
+  vec3 lower_left = origin - right / 2.0 - high / 2.0 - vec3(0, 0, FOCAL_LENGTH);
 
+  vec2 screenCoord = gl_FragCoord.xy / u_resolution;
+
+  vec3 ray_dir = lower_left + screenCoord.x * right + screenCoord.y * high - origin;
+
+  outColor = sky(ray_dir);
 }
