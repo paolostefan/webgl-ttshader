@@ -12,17 +12,47 @@ uniform vec2 u_mouse;
 #define VP_HEIGHT 2.0
 #define FOCAL_LENGTH 1.0
 
-vec3 horizon = vec3(.99,.97,.97);
-vec3 zenit = vec3(.44,.75,1.0);
-vec3 nadir = vec3(.5,.3,.0);
+/**
+ * @see https://raytracing.github.io/books/RayTracingInOneWeekend.html#surfacenormalsandmultipleobjects/shadingwithsurfacenormals
+ */
+float hit_sphere(vec3 center, float radius, vec3 origin, vec3 direction){
+  vec3 oc = origin - center;
+  float a = dot(direction,direction);
+  float half_b = dot(oc, direction);
+  float c = dot(oc, oc) - radius * radius;
+
+  float discriminant = half_b*half_b - a*c;
+
+  return discriminant < 0. ? -1. : (-half_b-sqrt(discriminant))/a;
+}
 
 /**
  * Colore del cielo
  */
+vec3 horizon = vec3(.99,.97,.97);
+vec3 zenit = vec3(.44,.7,1.0);
+vec3 nadir = vec3(.5,.3,.0);
+
 vec4 sky(vec3 direction) {
-  vec3 normal = normalize(direction);
-  
+  vec3 normal = normalize(direction); 
   return normal.y>=0.0? vec4(mix(horizon, zenit, normal.y), 1): vec4(mix(horizon, nadir, -normal.y), 1);
+}
+
+vec4 calcShading(vec3 origin, vec3 direction) {
+  // Sfera cromata perfetta
+  vec3 sphereCenter =  vec3(0.,.1,-1.);
+  float sphereRadius =  .4;
+  float reflectionAmount =  .91;
+
+  float t = hit_sphere(sphereCenter, sphereRadius, origin, direction);
+  if(t > 0.){
+    vec3 rayAtT = origin + t * direction;
+    vec3 normal = normalize(rayAtT-sphereCenter);
+    // return vec4( 0.5*(normal + vec3(1,1,1)), 1);
+    return reflectionAmount * sky( reflect(rayAtT, normal));
+  }
+
+  return sky(direction);
 }
 
 void main() {
@@ -39,5 +69,5 @@ void main() {
 
   vec3 ray_dir = lower_left + screenCoord.x * right + screenCoord.y * high - origin;
 
-  outColor = sky(ray_dir);
+  outColor = calcShading(origin, ray_dir);
 }
