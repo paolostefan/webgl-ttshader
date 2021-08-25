@@ -3,46 +3,6 @@ import { glCapsule } from "./glCapsule";
 import fragmentShaderSrc from "./shaders/mandelbrot-antialias.glsl";
 
 export class Mandelbrot extends glCapsule {
-  createShader(type: number, src: string) {
-    const shader = this.gl.createShader(type);
-    this.gl.shaderSource(shader, src);
-    this.gl.compileShader(shader);
-    if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-      const msg = "Cannot create shader\n" + this.gl.getShaderInfoLog(shader);
-      this.displayError(msg);
-      this.gl.deleteShader(shader);
-      throw new Error(msg);
-    }
-    return shader;
-  }
-
-
-  updateUniform1f(name: string) {
-    return (value: number) => {
-      this.gl.uniform1f(this.uniformLoc(name), value);
-    };
-  }
-
-  updateUniform2f(name: string) {
-    return () => {
-      this.gl.uniform2f(
-        this.uniformLoc(name),
-        this.parameters[name].x,
-        this.parameters[name].y
-      );
-    };
-  }
-
-  updateUniform3f(name: string) {
-    return () => {
-      this.gl.uniform3f(
-        this.uniformLoc(name),
-        this.parameters[name].x,
-        this.parameters[name].y,
-        this.parameters[name].z
-      );
-    };
-  }
 
   drawScene(milliseconds: number) {
     const primitiveType = this.gl.TRIANGLES;

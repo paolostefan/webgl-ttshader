@@ -1,13 +1,14 @@
 export abstract class glCapsule {
   public errorContainer: any;
   protected canvas: any;
-  public gl;
+  public gl: any; // TODO : fare meglio
   public parameters: { [key: string]: any };
 
   protected program: any;
   protected vao: any;
 
   abstract doTheJob(): void;
+  abstract drawScene(milliseconds:number): void;
 
   constructor() {
     this.errorContainer = document.querySelector("#errormsg");
@@ -15,14 +16,17 @@ export abstract class glCapsule {
     this.gl = this.canvas.getContext("webgl2");
     if (!this.gl) {
       const msg =
-      "Fatal error: WebGL2 not available. Please check your browser's compatibility.";
+        "Fatal error: WebGL2 not available. Please check your browser's compatibility.";
       alert("WebGL2 not available");
       this.displayError(msg);
       throw new Error(msg);
     }
     console.log("Got WebGL2");
 
-    this.canvas.addEventListener("mousemove", this.updateMouseCoords.bind(this));
+    this.canvas.addEventListener(
+      "mousemove",
+      this.updateMouseCoords.bind(this)
+    );
   }
 
   displayError(msg: string) {
@@ -30,15 +34,51 @@ export abstract class glCapsule {
   }
 
   updateMouseCoords(event: { clientX: number; clientY: number }) {
-    this.gl.uniform2f(
-      this.uniformLoc("u_mouse"),
-      event.clientX,
-      event.clientY
-    );
+    this.gl.uniform2f(this.uniformLoc("u_mouse"), event.clientX, event.clientY);
   }
 
   uniformLoc(name: string) {
     return this.gl.getUniformLocation(this.program, name);
+  }
+
+  createShader(type: number, src: string) {
+    const shader = this.gl.createShader(type);
+    this.gl.shaderSource(shader, src);
+    this.gl.compileShader(shader);
+    if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+      const msg = `Cannot create shader of type ${type}\n` + this.gl.getShaderInfoLog(shader);
+      this.displayError(msg);
+      this.gl.deleteShader(shader);
+      throw new Error(msg);
+    }
+    return shader;
+  }
+
+  updateUniform1f(name: string) {
+    return (value: number) => {
+      this.gl.uniform1f(this.uniformLoc(name), value);
+    };
+  }
+
+  updateUniform2f(name: string) {
+    return () => {
+      this.gl.uniform2f(
+        this.uniformLoc(name),
+        this.parameters[name].x,
+        this.parameters[name].y
+      );
+    };
+  }
+
+  updateUniform3f(name: string) {
+    return () => {
+      this.gl.uniform3f(
+        this.uniformLoc(name),
+        this.parameters[name].x,
+        this.parameters[name].y,
+        this.parameters[name].z
+      );
+    };
   }
 
   createAndLinkProgram(vertexShader: any, fragmentShader: any) {
