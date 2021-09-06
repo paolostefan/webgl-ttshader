@@ -1,14 +1,14 @@
 export abstract class glCapsule {
   public errorContainer: any;
   protected canvas: any;
-  public gl: any; // TODO : fare meglio
+  public gl: WebGL2RenderingContext; // TODO : fare meglio
   public parameters: { [key: string]: any };
 
   protected program: any;
   protected vao: any;
 
   abstract doTheJob(): void;
-  abstract drawScene(milliseconds:number): void;
+  abstract drawScene(milliseconds: number): void;
 
   constructor() {
     this.errorContainer = document.querySelector("#errormsg");
@@ -46,7 +46,9 @@ export abstract class glCapsule {
     this.gl.shaderSource(shader, src);
     this.gl.compileShader(shader);
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-      const msg = `Cannot create shader of type ${type}\n` + this.gl.getShaderInfoLog(shader);
+      const msg =
+        `Cannot create shader of type ${type}\n` +
+        this.gl.getShaderInfoLog(shader);
       this.displayError(msg);
       this.gl.deleteShader(shader);
       throw new Error(msg);
@@ -100,13 +102,9 @@ export abstract class glCapsule {
   }
 
   toggleFullscreen(fs: boolean) {
-    if (fs) {
-      this.canvas.width = window.innerWidth;
-      this.canvas.height = window.innerHeight;
-    } else {
-      this.canvas.width = 800;
-      this.canvas.height = 600;
-    }
+    this.canvas.width = fs ? window.innerWidth : 800;
+    this.canvas.height = fs ? window.innerHeight : 600;
+
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.gl.uniform2f(
       this.uniformLoc("u_resolution"),

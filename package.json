@@ -1,7 +1,7 @@
 {
   "name": "webgl-ttshader",
-  "version": "1.0.1",
-  "description": "Boilerplate for 2 triangles shader",
+  "version": "1.0.2",
+  "description": "Boilerplate for WebGL shader",
   "private": true,
   "scripts": {
     "build": "webpack",
@@ -12,7 +12,8 @@
   "author": "",
   "license": "UNLICENSED",
   "dependencies": {
-    "dat.gui": "^0.7.7"
+    "dat.gui": "^0.7.7",
+    "gl-matrix": "^3.3.0"
   },
   "devDependencies": {
     "@types/dat.gui": "^0.7.7",

@@ -134,7 +134,7 @@ export class Mandelbrot extends glCapsule {
     );
 
     // Dat.gui
-    const gui = new dat.GUI({ name: "Gianfranco" });
+    const gui = new dat.GUI({ name: "Benoit" });
 
     gui.add(this.parameters, "fullscreen").onChange(this.toggleFullscreen.bind(this));
 
