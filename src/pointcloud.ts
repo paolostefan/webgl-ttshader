@@ -1,5 +1,5 @@
 import * as dat from "dat.gui";
-import { mat4, vec4 } from "gl-matrix";
+import { mat4, vec3, vec4 } from "gl-matrix";
 import { glCapsule } from "./glCapsule";
 import fragmentShaderSrc from "./shaders/pointcloud-fragment.glsl";
 import vertexShaderSrc from "./shaders/pointcloud-vertex.glsl";
@@ -7,58 +7,73 @@ import vertexShaderSrc from "./shaders/pointcloud-vertex.glsl";
 /**
  * Point cloud
  */
+
+const POINT_COUNT = 500;
+
 export class Pointcloud extends glCapsule {
   // Parameters handled by Dat.gui widgets
   parameters = {
     fullscreen: false,
     // Frustum variables
-    F_near: 5.0,
-    F_far: 2000.0,
-    F_bottom: -3.0,
-    F_top: 3.0,
-    F_left: -10,
-    F_right: 10,
+    F_near: 10.0,
+    F_far: 150.0,
+    F_bottom: -6.0,
+    F_top: 6.0,
+    F_left: 0, // Left e Right vengono impostati automaticamente da setMatrix
+    F_right: 0,
+    scale: 50,
   };
 
-  coordinates = [0.02083333395421505, 16.66666603088379, -160.77694702148438, -150]; // -.1, -.1, 10, 0, .999, 10.5];
+  // Cubo di lato 2 centrato in zero
+  // coordinates = [0.02083333395421505, 16.66666603088379, -160.77694702148438, -150]; // -.1, -.1, 10, 0, .999, 10.5];
+
+  coordinates = new Array<number>(POINT_COUNT*3);
   vbo: any;
 
-  projMatrix = mat4.create();
+  projMatrix: mat4;
 
   drawScene(milliseconds: number) {
-    this.gl.clearColor(0, 0, 0.2, 1);
+    this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
     this.gl.useProgram(this.program);
     this.gl.bindVertexArray(this.vao);
 
-    const primitiveType = this.gl.POINTS;
     const offset = 0;
     // N. di punti
-    const count = 1;
-    this.gl.drawArrays(primitiveType, offset, count);
+    const count = POINT_COUNT;
+    this.gl.drawArrays(this.gl.POINTS, offset, count);
 
     // Aggiorna le variabili uniform
-    this.setFrustumMatrix();
+    this.setMatrix(milliseconds);
     this.gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
 
-    // let testpoint = vec4.fromValues(10, 10, 150, 1);
-    // vec4.transformMat4(testpoint, testpoint, this.projMatrix);
-    // console.log(testpoint);
-    debugger;
-    
     window.requestAnimationFrame((m) => {
       this.drawScene(m);
+      this.updateFps(m);
     });
   }
 
-  setFrustumMatrix() {
-    this.parameters.F_right =
-      (this.canvas.width * (this.parameters.F_top - this.parameters.F_bottom)) /
-      2;
-    this.parameters.F_left = -this.parameters.F_right;
+  setMatrix(milliseconds?: number) {
+    const m = mat4.create();
 
-    this.projMatrix = mat4.frustum(
+    mat4.translate(m, m, vec3.fromValues(0, 0, -100));
+
+    mat4.scale(
+      m,
+      m,
+      vec3.fromValues(
+        this.parameters.scale,
+        this.parameters.scale,
+        this.parameters.scale
+      )
+    );
+
+    mat4.rotateY(m, m, milliseconds / 3000);
+
+    this.projMatrix = mat4.create();
+
+    mat4.frustum(
       this.projMatrix,
       this.parameters.F_left,
       this.parameters.F_right,
@@ -68,13 +83,13 @@ export class Pointcloud extends glCapsule {
       this.parameters.F_far
     );
 
-    // console.log(this.projMatrix)
-    
+    this.projMatrix = mat4.multiply(this.projMatrix, this.projMatrix, m);
+
     this.gl.uniformMatrix4fv(
       this.uniformLoc("u_matrix"),
       false,
       this.projMatrix
-      );
+    );
   }
 
   /**
@@ -99,10 +114,11 @@ export class Pointcloud extends glCapsule {
       .onChange(this.toggleFullscreen.bind(this));
     gui
       .add(this.parameters, "F_near", 1, 100)
-      .onChange(this.setFrustumMatrix.bind(this));
-    gui.add(this.parameters, "F_far", 2, 2000);
+      .onChange(this.setMatrix.bind(this));
+    gui.add(this.parameters, "F_far", 1.9, 2000);
     gui.add(this.parameters, "F_bottom", -20, 0);
     gui.add(this.parameters, "F_top", 0, 20);
+    gui.add(this.parameters, "scale", 3, 100);
 
     gui.open();
   }
@@ -129,6 +145,15 @@ export class Pointcloud extends glCapsule {
       this.program,
       "coordinates"
     );
+
+    console.log("Initializing a huge array of random points...");
+    for (let i = 0; i < POINT_COUNT; i++) {
+      this.coordinates[i*3] = -1 + Math.random()*2;
+      this.coordinates[i*3+1] = -1 + Math.random()*2;
+      this.coordinates[i*3+2] = -1 + Math.random()*2;
+    }
+
+
     var positionBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
     // three 3d points
@@ -143,7 +168,7 @@ export class Pointcloud extends glCapsule {
     this.gl.bindVertexArray(this.vao);
     this.gl.enableVertexAttribArray(positionAttributeLocation);
 
-    var size = 4; // 3 components per iteration
+    var size = 3; // 3 components per iteration
     var type = this.gl.FLOAT; // the data is 32bit floats
     var normalize = false; // don't normalize the data
     var stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
@@ -159,13 +184,29 @@ export class Pointcloud extends glCapsule {
 
     this.initGUI();
 
-    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.gl.viewport(0, 0, this.canvas.clientWidth, this.canvas.clientHeight);
+    this.parameters.F_right =
+      (this.canvas.clientWidth *
+        (this.parameters.F_top - this.parameters.F_bottom)) /
+      (this.canvas.clientHeight * 2);
+    this.parameters.F_left = -this.parameters.F_right;
+
     this.gl.enable(this.gl.DEPTH_TEST);
+
 
     console.log("Init successful");
 
     window.requestAnimationFrame((milliseconds) => {
       this.drawScene(milliseconds);
     });
+  }
+
+  toggleFullscreen(fs: boolean) {
+    super.toggleFullscreen(fs);
+    this.parameters.F_right =
+      (this.canvas.clientWidth *
+        (this.parameters.F_top - this.parameters.F_bottom)) /
+      (this.canvas.clientHeight * 2);
+    this.parameters.F_left = -this.parameters.F_right;
   }
 }

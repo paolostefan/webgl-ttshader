@@ -1,10 +1,12 @@
 #version 300 es
 
 precision highp float;
+
+in vec4 o_color;
+uniform float u_time;
 out vec4 outColor;
 
-uniform float u_time;
 
 void main(void){
-  outColor = vec4(vec3(1.-fract(u_time/1500.)), 1.);
+  outColor = o_color;
 }

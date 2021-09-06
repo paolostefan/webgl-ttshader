@@ -13,8 +13,10 @@ function updateMouseCoords(event:any) {
 
 // Init the renderer var: create an instance of a glCapsule implementation 
 
-// renderer = new Mandelbrot();
-// renderer = new Raymarcher();
-renderer = new Pointcloud();
+renderer = 
+// new Mandelbrot();
+//  new Raymarcher();
+ new Pointcloud();
+
 renderer.doTheJob();
 

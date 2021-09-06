@@ -3,7 +3,6 @@ import { glCapsule } from "./glCapsule";
 import fragmentShaderSrc from "./shaders/mandelbrot-antialias.glsl";
 
 export class Mandelbrot extends glCapsule {
-
   drawScene(milliseconds: number) {
     const primitiveType = this.gl.TRIANGLES;
     const offset = 0;
@@ -16,6 +15,7 @@ export class Mandelbrot extends glCapsule {
 
     window.requestAnimationFrame((m) => {
       this.drawScene(m);
+      this.updateFps(m);
     });
   }
 
@@ -136,7 +136,9 @@ export class Mandelbrot extends glCapsule {
     // Dat.gui
     const gui = new dat.GUI({ name: "Benoit" });
 
-    gui.add(this.parameters, "fullscreen").onChange(this.toggleFullscreen.bind(this));
+    gui
+      .add(this.parameters, "fullscreen")
+      .onChange(this.toggleFullscreen.bind(this));
 
     const folderRes = gui.addFolder("Vertical side screen size");
     folderRes

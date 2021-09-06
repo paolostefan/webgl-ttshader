@@ -6,6 +6,8 @@ export abstract class glCapsule {
 
   protected program: any;
   protected vao: any;
+  private lastMilliseconds = 0;
+  private fps = 0;
 
   abstract doTheJob(): void;
   abstract drawScene(milliseconds: number): void;
@@ -111,5 +113,16 @@ export abstract class glCapsule {
       this.canvas.width,
       this.canvas.height
     );
+  }
+
+  updateFps(milliseconds: number) {
+    // console.debug("updateFps(%d)", milliseconds);
+    if (milliseconds - this.lastMilliseconds >= 1000) {
+      document.getElementById("fps").innerHTML = (this.fps+1).toString();
+      this.lastMilliseconds = milliseconds;
+      this.fps = 0;
+    } else {
+      this.fps++;
+    }
   }
 }

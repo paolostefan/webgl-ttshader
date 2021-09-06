@@ -12,9 +12,28 @@
         padding: 0;
         background-color: darkslategrey;
       }
+      .error_msg {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+      }
+      .fps {
+        font-family: sans-serif;
+        font-size: 11px;
+        position: absolute;
+        left: 12px;
+        bottom: 12px;
+        padding: .5em;
+        border-radius: .5em;
+        background-color: rgb(0,0,0,.4);
+        color: antiquewhite;
+      }
     </style>
     <canvas id="c" width="800" height="600"></canvas>
-    <div style="position: absolute; bottom: 0; right: 0">
+    <div class="fps">
+      <span id="fps"></span> FPS
+    </div>
+    <div class="error_msg">
       <pre id="errormsg"></pre>
     </div>
   </body>
