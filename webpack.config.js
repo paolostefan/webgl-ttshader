@@ -6,6 +6,7 @@ module.exports = {
   entry: {
     index: "./src/index.ts",
     mandelbrot: "./src/mandelbrot.ts",
+    pointcloud: "./src/pointcloud.ts",
     raymarcher: "./src/raymarcher.ts",
   },
   devtool: "inline-source-map",

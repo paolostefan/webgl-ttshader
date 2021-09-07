@@ -16,12 +16,13 @@ export class Pointcloud extends glCapsule {
     fullscreen: false,
     // Frustum variables
     F_near: 10.0,
-    F_far: 150.0,
+    F_far: 250.0,
     F_bottom: -6.0,
     F_top: 6.0,
     F_left: 0, // Left e Right vengono impostati automaticamente da setMatrix
     F_right: 0,
     scale: 50,
+    translate: -100,
   };
 
   // Cubo di lato 2 centrato in zero
@@ -57,7 +58,7 @@ export class Pointcloud extends glCapsule {
   setMatrix(milliseconds?: number) {
     const m = mat4.create();
 
-    mat4.translate(m, m, vec3.fromValues(0, 0, -100));
+    mat4.translate(m, m, vec3.fromValues(0, 0, this.parameters.translate));
 
     mat4.scale(
       m,
@@ -99,11 +100,11 @@ export class Pointcloud extends glCapsule {
     this.gl.uniform1f(this.uniformLoc("u_time"), 0);
     this.gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
 
-    this.gl.uniform2f(
-      this.uniformLoc("u_resolution"),
-      this.canvas.width,
-      this.canvas.height
-    );
+    // this.gl.uniform2f(
+    //   this.uniformLoc("u_resolution"),
+    //   this.canvas.width,
+    //   this.canvas.height
+    // );
   }
 
   initGUI() {
@@ -119,6 +120,7 @@ export class Pointcloud extends glCapsule {
     gui.add(this.parameters, "F_bottom", -20, 0);
     gui.add(this.parameters, "F_top", 0, 20);
     gui.add(this.parameters, "scale", 3, 100);
+    gui.add(this.parameters, "translate", -300, -1);
 
     gui.open();
   }
@@ -146,7 +148,7 @@ export class Pointcloud extends glCapsule {
       "coordinates"
     );
 
-    console.log("Initializing a huge array of random points...");
+    console.log("Initializing array of random points...");
     for (let i = 0; i < POINT_COUNT; i++) {
       this.coordinates[i*3] = -1 + Math.random()*2;
       this.coordinates[i*3+1] = -1 + Math.random()*2;

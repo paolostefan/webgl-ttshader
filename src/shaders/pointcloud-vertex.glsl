@@ -4,11 +4,10 @@ precision highp float;
 
 uniform mat4 u_matrix;
 in vec4 coordinates;
-out vec4 o_color;
+out float zNorm;
 
 void main(void) {
   gl_Position = u_matrix * coordinates;
-  float zNorm = gl_Position.z/gl_Position.w;
-  gl_PointSize = 1.5 + .5*zNorm;
-  o_color = vec4(.5 - .5*zNorm);
+  zNorm = gl_Position.z/gl_Position.w;
+  gl_PointSize = .5 + 3.5*abs(zNorm);
 }
