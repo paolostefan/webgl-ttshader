@@ -5,7 +5,7 @@ import fragmentShaderSrc from "./shaders/pointcloud-fragment.glsl";
 import vertexShaderSrc from "./shaders/pointcloud-vertex.glsl";
 
 /**
- * Point cloud
+ * "Point cloud", cioè un semplice mucchio di punti che ruotano sull'asse verticale
  */
 
 const POINT_COUNT = 15000;
