@@ -1,5 +1,5 @@
 import * as dat from "dat.gui";
-import { mat4, vec3, vec4 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
 import { glCapsule } from "./glCapsule";
 import fragmentShaderSrc from "./shaders/pointcloud-fragment.glsl";
 import vertexShaderSrc from "./shaders/pointcloud-vertex.glsl";
@@ -8,7 +8,7 @@ import vertexShaderSrc from "./shaders/pointcloud-vertex.glsl";
  * Point cloud
  */
 
-const POINT_COUNT = 500;
+const POINT_COUNT = 15000;
 
 export class Pointcloud extends glCapsule {
   // Parameters handled by Dat.gui widgets
@@ -21,14 +21,15 @@ export class Pointcloud extends glCapsule {
     F_top: 6.0,
     F_left: 0, // Left e Right vengono impostati automaticamente da setMatrix
     F_right: 0,
-    scale: 50,
-    translate: -100,
+    scale: 9,
+    translate: -20,
+    rotateX: 0,
   };
 
   // Cubo di lato 2 centrato in zero
   // coordinates = [0.02083333395421505, 16.66666603088379, -160.77694702148438, -150]; // -.1, -.1, 10, 0, .999, 10.5];
 
-  coordinates = new Array<number>(POINT_COUNT*3);
+  coordinates = new Array<number>(POINT_COUNT * 3);
   vbo: any;
 
   projMatrix: mat4;
@@ -55,6 +56,10 @@ export class Pointcloud extends glCapsule {
     });
   }
 
+  /**
+   * Imposta la matrice di trasformazione
+   * @param milliseconds 
+   */
   setMatrix(milliseconds?: number) {
     const m = mat4.create();
 
@@ -70,6 +75,7 @@ export class Pointcloud extends glCapsule {
       )
     );
 
+    mat4.rotateX(m, m, this.parameters.rotateX);
     mat4.rotateY(m, m, milliseconds / 3000);
 
     this.projMatrix = mat4.create();
@@ -121,6 +127,7 @@ export class Pointcloud extends glCapsule {
     gui.add(this.parameters, "F_top", 0, 20);
     gui.add(this.parameters, "scale", 3, 100);
     gui.add(this.parameters, "translate", -300, -1);
+    gui.add(this.parameters, "rotateX", -Math.PI, Math.PI, 0.005);
 
     gui.open();
   }
@@ -129,6 +136,7 @@ export class Pointcloud extends glCapsule {
     // Creazione degli shader e del programma
     // ======================================
 
+    console.time("Created vertex and fragment shaders");
     const vertexShader = this.createShader(
       this.gl.VERTEX_SHADER,
       vertexShaderSrc
@@ -139,7 +147,7 @@ export class Pointcloud extends glCapsule {
       fragmentShaderSrc
     );
 
-    console.log("Created vertex and fragment shaders");
+    console.timeEnd("Created vertex and fragment shaders");
 
     this.program = this.createAndLinkProgram(vertexShader, fragmentShader);
 
@@ -148,13 +156,15 @@ export class Pointcloud extends glCapsule {
       "coordinates"
     );
 
-    console.log("Initializing array of random points...");
+    console.time("Initialized array of random points");
     for (let i = 0; i < POINT_COUNT; i++) {
-      this.coordinates[i*3] = -1 + Math.random()*2;
-      this.coordinates[i*3+1] = -1 + Math.random()*2;
-      this.coordinates[i*3+2] = -1 + Math.random()*2;
+      const radius = Math.pow(Math.random(), 5);
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI;
+      this.coordinates[i * 3] = radius * Math.cos(theta) * Math.cos(phi);
+      this.coordinates[i * 3 + 1] = radius * Math.sin(phi);
+      this.coordinates[i * 3 + 2] = radius * Math.sin(theta) * Math.cos(phi);
     }
-
 
     var positionBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
@@ -183,6 +193,7 @@ export class Pointcloud extends glCapsule {
       stride,
       offset
     );
+    console.timeEnd("Initialized array of random points");
 
     this.initGUI();
 
@@ -194,7 +205,6 @@ export class Pointcloud extends glCapsule {
     this.parameters.F_left = -this.parameters.F_right;
 
     this.gl.enable(this.gl.DEPTH_TEST);
-
 
     console.log("Init successful");
 

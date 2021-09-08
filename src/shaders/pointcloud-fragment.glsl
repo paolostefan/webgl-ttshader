@@ -2,11 +2,11 @@
 
 precision highp float;
 
-in float zNorm;
+in vec4 a_coordinates;
 uniform float u_time;
 out vec4 outColor;
 
 
 void main(void){
-  outColor = vec4(1.-zNorm/2.);
+  outColor = vec4(vec3(1)-abs(a_coordinates.xyz),1);
 }
