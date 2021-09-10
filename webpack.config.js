@@ -7,7 +7,7 @@ module.exports = {
     index: "./src/index.ts",
     mandelbrot: "./src/mandelbrot.ts",
     pointcloud: "./src/pointcloud.ts",
-    raymarcher: "./src/raymarcher.ts",
+    raytracer: "./src/raytracer.ts",
   },
   devtool: "inline-source-map",
   devServer: {

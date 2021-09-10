@@ -1,12 +1,25 @@
 import * as dat from "dat.gui";
 import { glCapsule } from "./glCapsule";
-import fragmentShaderSrc from "./shaders/raymarcher.glsl";
+import fragmentShaderSrc from "./shaders/palette.glsl";
 
 /**
- * Ray tracer/ ray marcher implementato "lato fragment shader" usando due triangoli
+ * Palette ciclica
  */
 
-export class Raymarcher extends glCapsule {
+export class Palette extends glCapsule {
+parameters = {
+    a: { r: 0.55, g: 0.4, b: 0.23 },
+    b: { r: 0.44, g: 0.58, b: 0.77 },
+    c: { r: 2.1, g: 2.9, b: 2.2 },
+    d: { r: 0.44, g: 0.52, b: 0.92 },
+    };
+    
+    // Altri valori interessanti
+    // a: { r: 0.17, g: 0.5, b: 0.5 },
+    // b: { r: 0.83, g: 0.5, b: 0.5 },
+    // c: { r: 6, g: 5.4, b: 2.2 },
+    // d: { r: 0.46, g: 0.68, b: 0.98 },
+
   drawScene(milliseconds: number) {
     const primitiveType = this.gl.TRIANGLES;
     const offset = 0;
@@ -38,39 +51,35 @@ export class Raymarcher extends glCapsule {
       this.canvas.height
     );
 
-    this.gl.uniform1f(this.uniformLoc("vside"), this.parameters.vside);
-    this.gl.uniform2f(
-      this.uniformLoc("lower_left"),
-      this.parameters.lower_left.x,
-      this.parameters.lower_left.y
-    );
     this.gl.uniform3f(
       this.uniformLoc("a"),
-      this.parameters.a.x,
-      this.parameters.a.y,
-      this.parameters.a.z
+      this.parameters.a.r,
+      this.parameters.a.g,
+      this.parameters.a.b
     );
     this.gl.uniform3f(
       this.uniformLoc("b"),
-      this.parameters.b.x,
-      this.parameters.b.y,
-      this.parameters.b.z
+      this.parameters.b.r,
+      this.parameters.b.g,
+      this.parameters.b.b
     );
     this.gl.uniform3f(
       this.uniformLoc("c"),
-      this.parameters.c.x,
-      this.parameters.c.y,
-      this.parameters.c.z
+      this.parameters.c.r,
+      this.parameters.c.g,
+      this.parameters.c.b
     );
     this.gl.uniform3f(
       this.uniformLoc("d"),
-      this.parameters.d.x,
-      this.parameters.d.y,
-      this.parameters.d.z
+      this.parameters.d.r,
+      this.parameters.d.g,
+      this.parameters.d.b
     );
   }
 
-  doTheJob() {
+  run() {
+    console.time("Init successful");
+
     const vertexShaderSrc = `#version 300 es
     in vec4 a_position;
     
@@ -125,25 +134,7 @@ export class Raymarcher extends glCapsule {
     );
 
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    this.parameters = {
-      fullscreen: false,
-      vside: 0.035,
-      lower_left: { x: -1.179, y: -0.293 },
-      a: { x: 0.55, y: 0.4, z: 0.23 },
-      b: { x: 0.44, y: 0.58, z: 0.77 },
-      c: { x: 2.1, y: 2.9, z: 2.2 },
-      d: { x: 0.44, y: 0.52, z: 0.92 },
-    };
 
-    // Altri valori interessanti
-    // res: {
-    //   vside: 0.176,
-    //   lower_left: { x: -0.681, y: -0.711 },
-    // },
-    // a: { x: 0.17, y: 0.5, z: 0.5 },
-    // b: { x: 0.83, y: 0.5, z: 0.5 },
-    // c: { x: 6, y: 5.4, z: 2.2 },
-    // d: { x: 0.46, y: 0.68, z: 0.98 },
 
     this.drawScene(0);
 
@@ -153,65 +144,48 @@ export class Raymarcher extends glCapsule {
     // Dat.gui
     const gui = new dat.GUI({ name: "Gianfranco" });
 
-    gui
-      .add(this.parameters, "fullscreen")
-      .onChange(this.toggleFullscreen.bind(this));
-
-    const folderRes = gui.addFolder("Vertical side screen size");
-    folderRes
-      .add(this.parameters, "vside", 0.001, 4.0, 0.001)
-      .onChange(this.updateUniform1f("vside"));
-
-    const folderLowerLeft = gui.addFolder("Lower left corner coords");
-    folderLowerLeft
-      .add(this.parameters.lower_left, "x", -2.8, 2.8, 0.001)
-      .onChange(this.updateUniform2f("lower_left"));
-    folderLowerLeft
-      .add(this.parameters.lower_left, "y", -2.8, 2.8, 0.001)
-      .onChange(this.updateUniform2f("lower_left"));
-
     const folderA = gui.addFolder("a");
     folderA
-      .add(this.parameters.a, "x", 0, 1.0, 0.01)
+      .add(this.parameters.a, "r", 0, 1.0, 0.01)
       .onChange(this.updateUniform3f("a"));
     folderA
-      .add(this.parameters.a, "y", 0, 1.0, 0.01)
+      .add(this.parameters.a, "g", 0, 1.0, 0.01)
       .onChange(this.updateUniform3f("a"));
     folderA
-      .add(this.parameters.a, "z", 0, 1.0, 0.01)
+      .add(this.parameters.a, "b", 0, 1.0, 0.01)
       .onChange(this.updateUniform3f("a"));
 
     const folderB = gui.addFolder("b");
     folderB
-      .add(this.parameters.b, "x", 0, 1.0, 0.01)
+      .add(this.parameters.b, "r", 0, 1.0, 0.01)
       .onChange(this.updateUniform3f("b"));
     folderB
-      .add(this.parameters.b, "y", 0, 1.0, 0.01)
+      .add(this.parameters.b, "g", 0, 1.0, 0.01)
       .onChange(this.updateUniform3f("b"));
     folderB
-      .add(this.parameters.b, "z", 0, 1.0, 0.01)
+      .add(this.parameters.b, "b", 0, 1.0, 0.01)
       .onChange(this.updateUniform3f("b"));
 
     const folderC = gui.addFolder("c");
     folderC
-      .add(this.parameters.c, "x", 0, 6.0, 0.1)
+      .add(this.parameters.c, "r", 0, 10, .1)
       .onChange(this.updateUniform3f("c"));
     folderC
-      .add(this.parameters.c, "y", 0, 6.0, 0.1)
+      .add(this.parameters.c, "g", 0, 10, .1)
       .onChange(this.updateUniform3f("c"));
     folderC
-      .add(this.parameters.c, "z", 0, 6.0, 0.1)
+      .add(this.parameters.c, "b", 0, 10, .1)
       .onChange(this.updateUniform3f("c"));
 
     const folderD = gui.addFolder("d");
     folderD
-      .add(this.parameters.d, "x", 0, 1.0, 0.01)
+      .add(this.parameters.d, "r", 0, 1.0, 0.01)
       .onChange(this.updateUniform3f("d"));
     folderD
-      .add(this.parameters.d, "y", 0, 1.0, 0.01)
+      .add(this.parameters.d, "g", 0, 1.0, 0.01)
       .onChange(this.updateUniform3f("d"));
     folderD
-      .add(this.parameters.d, "z", 0, 1.0, 0.01)
+      .add(this.parameters.d, "b", 0, 1.0, 0.01)
       .onChange(this.updateUniform3f("d"));
 
     gui.open();
@@ -220,6 +194,17 @@ export class Raymarcher extends glCapsule {
       this.drawScene(milliseconds);
     });
 
-    console.log("Init successful");
+    console.timeEnd("Init successful");
+  }
+
+  updateUniform3f(name: string) {
+    return () => {
+      this.gl.uniform3f(
+        this.uniformLoc(name),
+        this.parameters[name].r,
+        this.parameters[name].g,
+        this.parameters[name].b
+      );
+    };
   }
 }

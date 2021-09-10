@@ -10,7 +10,7 @@ uniform vec2 lower_left;
 
 uniform vec3 a, b, c, d;
 uniform vec2 u_resolution;
-uniform vec2 mouse;
+uniform vec2 u_mouse;
 
 #define PI 3.141592653589
 #define MAXITER 512
@@ -80,9 +80,11 @@ void main(){
   displace[1] = vec2(P2X, P2Y);
   displace[2] = vec2(P3X, P3Y);
   displace[3] = vec2(P4X, P4Y);
-  vec3 color_ = vec3(0.0);
+
+  vec3 color_ = vec3(.0);
+
   for(int i=0; i<SAMPLING_SIZE; i++){
-    c = lower_left + scale*vec2(gl_FragCoord.x + displace[i].x, gl_FragCoord.y + displace[i].y);
+    c = lower_left + scale*(gl_FragCoord.xy + displace[i]) + .01*u_mouse/u_resolution;
     escaped = mandel(c);
     if (escaped != -1){
       color_ += col(escaped);
@@ -90,7 +92,7 @@ void main(){
   }
   outColor = vec4(color_/float(SAMPLING_SIZE),1.0);
 #else
-  c = lower_left + vec2(scale*gl_FragCoord);
+  c = lower_left + scale*(gl_FragCoord.xy) + .01*u_mouse/u_resolution;
   escaped = mandel(c);
   if (escaped == -1){
     outColor = vec4(vec3(0.0), 1.0);

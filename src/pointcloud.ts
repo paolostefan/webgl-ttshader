@@ -132,7 +132,7 @@ export class Pointcloud extends glCapsule {
     gui.open();
   }
 
-  doTheJob() {
+  run() {
     // Creazione degli shader e del programma
     // ======================================
 

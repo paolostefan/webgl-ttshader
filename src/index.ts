@@ -1,22 +1,9 @@
-import { Mandelbrot } from "./mandelbrot";
 import { glCapsule } from "./glCapsule";
-import { Raymarcher } from "./raymarcher";
-import { Pointcloud } from "./pointcloud";
+import { Raytracer } from "./raytracer";
 
-let renderer: glCapsule;
+// Init the renderer var with an instance of a glCapsule implementation 
+let renderer: glCapsule = new Raytracer();
 
-function updateMouseCoords(event:any) {
-  if (renderer) {
-    renderer.updateMouseCoords(event);
-  }
-}
-
-// Init the renderer var: create an instance of a glCapsule implementation 
-
-renderer = 
-// new Mandelbrot();
-//  new Raymarcher();
- new Pointcloud();
-
-renderer.doTheJob();
+// Run the renderer
+renderer.run();
 

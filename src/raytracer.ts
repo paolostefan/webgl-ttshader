@@ -1,8 +1,23 @@
 import * as dat from "dat.gui";
 import { glCapsule } from "./glCapsule";
-import fragmentShaderSrc from "./shaders/mandelbrot-antialias.glsl";
+import fragmentShaderSrc from "./shaders/raytracer.glsl";
 
-export class Mandelbrot extends glCapsule {
+/**
+ * Ray tracer/ ray marcher implementato solo "lato fragment shader" usando due triangoli
+ */
+
+export class Raytracer extends glCapsule {
+
+  // Elenco degli oggetti nella scena
+  readonly spheres = [
+    1,1, -3.1, .6,
+    1,-1, -3, .6,
+    -1,-1, -2.9, .6,
+    -1, 1, -3, .5,
+    0, .1, -2.5, .2,
+    6, -4.1, -18, 4,
+  ];
+
   drawScene(milliseconds: number) {
     const primitiveType = this.gl.TRIANGLES;
     const offset = 0;
@@ -13,10 +28,64 @@ export class Mandelbrot extends glCapsule {
     this.gl.bindVertexArray(this.vao);
     this.gl.drawArrays(primitiveType, offset, count);
 
+    // Aggiorna le variabili uniform
+    this.gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
+
     window.requestAnimationFrame((m) => {
       this.drawScene(m);
-      this.updateFps(m);
     });
+  }
+
+  /**
+   * Assegna i valori iniziali alle variabili Uniform utilizzate dallo shader
+   */
+  bindUniforms() {
+    this.gl.uniform1f(this.uniformLoc("u_time"), 0);
+    this.gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
+
+    this.gl.uniform2f(
+      this.uniformLoc("u_resolution"),
+      this.canvas.width,
+      this.canvas.height
+    );
+
+    this.gl.uniform1f(this.uniformLoc("vside"), this.parameters.vside);
+    this.gl.uniform2f(
+      this.uniformLoc("lower_left"),
+      this.parameters.lower_left.x,
+      this.parameters.lower_left.y
+    );
+    this.gl.uniform3f(
+      this.uniformLoc("a"),
+      this.parameters.a.x,
+      this.parameters.a.y,
+      this.parameters.a.z
+    );
+    this.gl.uniform3f(
+      this.uniformLoc("b"),
+      this.parameters.b.x,
+      this.parameters.b.y,
+      this.parameters.b.z
+    );
+    this.gl.uniform3f(
+      this.uniformLoc("c"),
+      this.parameters.c.x,
+      this.parameters.c.y,
+      this.parameters.c.z
+    );
+    this.gl.uniform3f(
+      this.uniformLoc("d"),
+      this.parameters.d.x,
+      this.parameters.d.y,
+      this.parameters.d.z
+    );
+
+    this.gl.uniform4fv(
+      this.uniformLoc("spheres"),
+      this.spheres,
+      0,
+      this.spheres.length
+    );
   }
 
   run() {
@@ -97,44 +166,10 @@ export class Mandelbrot extends glCapsule {
     this.drawScene(0);
 
     // Starting bind of uniform vars
-    this.gl.uniform2f(
-      this.uniformLoc("u_resolution"),
-      this.canvas.width,
-      this.canvas.height
-    );
-    this.gl.uniform1f(this.uniformLoc("vside"), this.parameters.vside);
-    this.gl.uniform2f(
-      this.uniformLoc("lower_left"),
-      this.parameters.lower_left.x,
-      this.parameters.lower_left.y
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("a"),
-      this.parameters.a.x,
-      this.parameters.a.y,
-      this.parameters.a.z
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("b"),
-      this.parameters.b.x,
-      this.parameters.b.y,
-      this.parameters.b.z
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("c"),
-      this.parameters.c.x,
-      this.parameters.c.y,
-      this.parameters.c.z
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("d"),
-      this.parameters.d.x,
-      this.parameters.d.y,
-      this.parameters.d.z
-    );
+    this.bindUniforms();
 
     // Dat.gui
-    const gui = new dat.GUI({ name: "Benoit" });
+    const gui = new dat.GUI({ name: "Gianfranco" });
 
     gui
       .add(this.parameters, "fullscreen")

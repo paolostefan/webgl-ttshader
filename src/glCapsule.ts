@@ -1,7 +1,7 @@
 export abstract class glCapsule {
   public errorContainer: any;
   protected canvas: any;
-  public gl: WebGL2RenderingContext; // TODO : fare meglio
+  public gl: WebGL2RenderingContext;
   public parameters: { [key: string]: any };
 
   protected program: any;
@@ -9,10 +9,11 @@ export abstract class glCapsule {
   private lastMilliseconds = 0;
   private fps = 0;
 
-  abstract doTheJob(): void;
+  abstract run(): void;
   abstract drawScene(milliseconds: number): void;
 
   constructor() {
+    console.time("Got WebGL2 context");
     this.errorContainer = document.querySelector("#errormsg");
     this.canvas = document.querySelector("#c");
     this.gl = this.canvas.getContext("webgl2");
@@ -23,7 +24,8 @@ export abstract class glCapsule {
       this.displayError(msg);
       throw new Error(msg);
     }
-    console.log("Got WebGL2");
+
+    console.timeEnd("Got WebGL2 context");
 
     this.canvas.addEventListener(
       "mousemove",
