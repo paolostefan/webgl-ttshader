@@ -51,8 +51,8 @@ export class Terrain extends glCapsule {
       this.canvas.height
     );
 
-    this.gl.uniform3f(this.uniformLoc("u_lookfrom"), Math.cos(milliseconds/3000), 5, Math.sin(milliseconds/3000));
-    this.gl.uniform3f(this.uniformLoc("u_lookat"), 0, 1+Math.sin(milliseconds/2000), 0);
+    this.gl.uniform3f(this.uniformLoc("u_lookfrom"),30 + Math.cos(milliseconds/3000), 6, 4*Math.sin(milliseconds/3000));
+    this.gl.uniform3f(this.uniformLoc("u_lookat"), 0, 0, 0);
   }
 
   run() {

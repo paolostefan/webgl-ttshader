@@ -19,8 +19,9 @@ uniform vec2 u_mouse;
 #define FOCAL_LENGTH 1.0
 
 #define DEBUG_RAYMARCH 0
+#define USE_CENTRAL_DIFFERENCES 0
 
-const float terrainLevel = -4.88;
+const float terrainLevel = 0.;
 const float terrainNoiseAmp = .45;
 
 const vec4 baseColor = vec4(0.94, 0.78, 0.42, 1);
@@ -39,14 +40,29 @@ vec4 sky(vec3 direction) {
 }
 
 float terrain(vec2 pt){
-  return terrainLevel + terrainNoiseAmp*cos(pt.x)*cos(pt.y);
+  return terrainLevel + terrainNoiseAmp*sin(pt.x)*sin(pt.y);
 }
 
 vec3 terrainNormal(vec2 pt){
-  vec3 dx = vec3(1, -terrainNoiseAmp*sin(pt.x), 0);
-  vec3 dz = vec3(0, -terrainNoiseAmp*sin(pt.y), 1);
+  #if USE_CENTRAL_DIFFERENCES
 
-  return normalize(cross(dz,dx));
+  const float epsilon = 0.01;
+  return normalize(vec3(
+    terrain(vec2(pt.x+epsilon, pt.y)) - terrain(vec2(pt.x-epsilon, pt.y)),
+    2.*epsilon,
+    terrain(vec2(pt.x, pt.y+epsilon)) - terrain(vec2(pt.x, pt.y - epsilon))
+    ));
+  
+  #else
+  
+  // normale = gradiente: nel caso di terreni definiti come y = f(x,z) il gradiente ha sempre componente y = 1
+  return normalize(vec3(
+    terrainNoiseAmp*cos(pt.x)*sin(pt.y),
+    1,
+    terrainNoiseAmp*sin(pt.x)*cos(pt.y))
+  );
+  
+  #endif
 }
 
 const float tMin = .1;
@@ -84,7 +100,7 @@ vec4 calcShading(vec3 origin, vec3 direction) {
   #else 
   // return vec4(0,1,0, 1.);
   float lambert = dot(terrainNormal((origin + direction*t).xz), sunDirection);
-  return vec4(lambert * baseColor.xyz,1);
+  return lambert>=.0? vec4(lambert * baseColor.xyz,1): vec4(vec3(0), 1);
   #endif
 }
 
