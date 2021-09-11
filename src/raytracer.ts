@@ -1,6 +1,7 @@
 import * as dat from "dat.gui";
 import { glCapsule } from "./glCapsule";
 import fragmentShaderSrc from "./shaders/raytracer.glsl";
+import { mat4, vec3 } from "gl-matrix";
 
 /**
  * Ray tracer/ ray marcher implementato solo "lato fragment shader" usando due triangoli
@@ -10,18 +11,31 @@ export class Raytracer extends glCapsule {
 
   // Elenco degli oggetti nella scena
   readonly spheres = [
-    1,1, -3.1, .6,
-    1,-1, -3, .6,
-    -1,-1, -2.9, .6,
-    -1, 1, -3, .5,
-    0, .1, -2.5, .2,
-    6, -4.1, -18, 4,
+     1,  1,   0, .5,
+     1, -1,   0, .66,
+    -1,  1,   0, .6,
+    -1, -1,   0, .37,
+     0,  0,  .5, .1,
+     0, -2, -3.5, 1,
   ];
+
+  transformMatrix: mat4 = mat4.create();
 
   drawScene(milliseconds: number) {
     const primitiveType = this.gl.TRIANGLES;
     const offset = 0;
     const count = 6;
+
+    let m = mat4.create();
+    m = mat4.translate(m, m, vec3.fromValues(0,0,-4));
+    m = mat4.rotateY(m, m, milliseconds/2873);
+    m = mat4.rotateX(m, m, milliseconds/3501);
+
+    const scale = 1+.3*Math.cos(milliseconds/1977);
+    m = mat4.scale(m, m, vec3.fromValues(scale, scale, scale));
+    
+    this.transformMatrix = m;
+
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     this.gl.useProgram(this.program);
@@ -29,18 +43,18 @@ export class Raytracer extends glCapsule {
     this.gl.drawArrays(primitiveType, offset, count);
 
     // Aggiorna le variabili uniform
-    this.gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
+    this.bindUniforms(milliseconds);
 
     window.requestAnimationFrame((m) => {
-      this.drawScene(m);
+      this.drawSceneWithFps(m);
     });
   }
 
   /**
    * Assegna i valori iniziali alle variabili Uniform utilizzate dallo shader
    */
-  bindUniforms() {
-    this.gl.uniform1f(this.uniformLoc("u_time"), 0);
+  bindUniforms(milliseconds:number) {
+    this.gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
     this.gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
 
     this.gl.uniform2f(
@@ -49,42 +63,17 @@ export class Raytracer extends glCapsule {
       this.canvas.height
     );
 
-    this.gl.uniform1f(this.uniformLoc("vside"), this.parameters.vside);
-    this.gl.uniform2f(
-      this.uniformLoc("lower_left"),
-      this.parameters.lower_left.x,
-      this.parameters.lower_left.y
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("a"),
-      this.parameters.a.x,
-      this.parameters.a.y,
-      this.parameters.a.z
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("b"),
-      this.parameters.b.x,
-      this.parameters.b.y,
-      this.parameters.b.z
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("c"),
-      this.parameters.c.x,
-      this.parameters.c.y,
-      this.parameters.c.z
-    );
-    this.gl.uniform3f(
-      this.uniformLoc("d"),
-      this.parameters.d.x,
-      this.parameters.d.y,
-      this.parameters.d.z
-    );
-
     this.gl.uniform4fv(
-      this.uniformLoc("spheres"),
+      this.uniformLoc("u_spheres"),
       this.spheres,
       0,
       this.spheres.length
+    );
+
+    this.gl.uniformMatrix4fv(
+      this.uniformLoc('u_matrix'),
+      false,
+      this.transformMatrix
     );
   }
 
@@ -145,12 +134,6 @@ export class Raytracer extends glCapsule {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.parameters = {
       fullscreen: false,
-      vside: 0.035,
-      lower_left: { x: -1.179, y: -0.293 },
-      a: { x: 0.55, y: 0.4, z: 0.23 },
-      b: { x: 0.44, y: 0.58, z: 0.77 },
-      c: { x: 2.1, y: 2.9, z: 2.2 },
-      d: { x: 0.44, y: 0.52, z: 0.92 },
     };
 
     // Altri valori interessanti
@@ -165,9 +148,6 @@ export class Raytracer extends glCapsule {
 
     this.drawScene(0);
 
-    // Starting bind of uniform vars
-    this.bindUniforms();
-
     // Dat.gui
     const gui = new dat.GUI({ name: "Gianfranco" });
 
@@ -175,62 +155,16 @@ export class Raytracer extends glCapsule {
       .add(this.parameters, "fullscreen")
       .onChange(this.toggleFullscreen.bind(this));
 
-    const folderRes = gui.addFolder("Vertical side screen size");
-    folderRes
-      .add(this.parameters, "vside", 0.001, 4.0, 0.001)
-      .onChange(this.updateUniform1f("vside"));
-
-    const folderLowerLeft = gui.addFolder("Lower left corner coords");
-    folderLowerLeft
-      .add(this.parameters.lower_left, "x", -2.8, 2.8, 0.001)
-      .onChange(this.updateUniform2f("lower_left"));
-    folderLowerLeft
-      .add(this.parameters.lower_left, "y", -2.8, 2.8, 0.001)
-      .onChange(this.updateUniform2f("lower_left"));
-
-    const folderA = gui.addFolder("a");
-    folderA
-      .add(this.parameters.a, "x", 0, 1.0, 0.01)
-      .onChange(this.updateUniform3f("a"));
-    folderA
-      .add(this.parameters.a, "y", 0, 1.0, 0.01)
-      .onChange(this.updateUniform3f("a"));
-    folderA
-      .add(this.parameters.a, "z", 0, 1.0, 0.01)
-      .onChange(this.updateUniform3f("a"));
-
-    const folderB = gui.addFolder("b");
-    folderB
-      .add(this.parameters.b, "x", 0, 1.0, 0.01)
-      .onChange(this.updateUniform3f("b"));
-    folderB
-      .add(this.parameters.b, "y", 0, 1.0, 0.01)
-      .onChange(this.updateUniform3f("b"));
-    folderB
-      .add(this.parameters.b, "z", 0, 1.0, 0.01)
-      .onChange(this.updateUniform3f("b"));
-
-    const folderC = gui.addFolder("c");
-    folderC
-      .add(this.parameters.c, "x", 0, 6.0, 0.1)
-      .onChange(this.updateUniform3f("c"));
-    folderC
-      .add(this.parameters.c, "y", 0, 6.0, 0.1)
-      .onChange(this.updateUniform3f("c"));
-    folderC
-      .add(this.parameters.c, "z", 0, 6.0, 0.1)
-      .onChange(this.updateUniform3f("c"));
-
-    const folderD = gui.addFolder("d");
-    folderD
-      .add(this.parameters.d, "x", 0, 1.0, 0.01)
-      .onChange(this.updateUniform3f("d"));
-    folderD
-      .add(this.parameters.d, "y", 0, 1.0, 0.01)
-      .onChange(this.updateUniform3f("d"));
-    folderD
-      .add(this.parameters.d, "z", 0, 1.0, 0.01)
-      .onChange(this.updateUniform3f("d"));
+    // const folderA = gui.addFolder("a");
+    // folderA
+    //   .add(this.parameters.a, "x", 0, 1.0, 0.01)
+    //   .onChange(this.updateUniform3f("a"));
+    // folderA
+    //   .add(this.parameters.a, "y", 0, 1.0, 0.01)
+    //   .onChange(this.updateUniform3f("a"));
+    // folderA
+    //   .add(this.parameters.a, "z", 0, 1.0, 0.01)
+    //   .onChange(this.updateUniform3f("a"));
 
     gui.open();
 

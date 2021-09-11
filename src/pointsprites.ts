@@ -10,7 +10,7 @@ import vertexShaderSrc from "./shaders/pointsprites-vertex.glsl";
 
 const POINT_COUNT = 15000;
 
-export class PointSprites extends glCapsule {
+export abstract class PointSprites extends glCapsule {
   // Parameters handled by Dat.gui widgets
   parameters = {
     fullscreen: false,
@@ -38,7 +38,8 @@ export class PointSprites extends glCapsule {
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-    this.gl.enable(this.gl.POINT_SPRITE)
+    // TS2339: Property 'POINT_SPRITE' does not exist on type 'WebGL2RenderingContext'.
+    // this.gl.enable(this.gl.POINT_SPRITE)
 
     this.gl.useProgram(this.program);
     this.gl.bindVertexArray(this.vao);

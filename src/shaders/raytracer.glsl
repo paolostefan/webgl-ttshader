@@ -4,21 +4,33 @@ precision highp float;
 out vec4 outColor;
 
 uniform vec2 u_resolution;
+
 // Tempo in millisecondi
 uniform float u_time;
+// Coordinate in pixel del puntatore
 uniform vec2 u_mouse;
+// Matrice di trasformazione del mondo
+uniform mat4 u_matrix;
 
 #define PI 3.141592653589
 #define VP_HEIGHT 2.0
 #define FOCAL_LENGTH 1.0
 
 // Numero massimo di rimbalzi di un raggio. Sopra questa profondità calcShading restituisce (0,0,0)
-#define MAX_RECURSION 12
+#define MAX_RECURSION 32
 
-#define NUM_SPHERES 6
-uniform vec4 spheres[NUM_SPHERES]; // xyz: center coords; w: radius
 vec3 bounces[MAX_RECURSION];
 vec3 directions[MAX_RECURSION];
+
+// 0: nessuna riflessione a parte il cielo
+// 1: riflessioni ricorsive fino a un massimo di MAX_RECURSION
+// Qualsiasi altro valore: una sola riflessione
+#define RECURSE_REFLECTIONS 1
+
+#define NUM_SPHERES 6
+uniform vec4 u_spheres[NUM_SPHERES]; // xyz: center coords; w: radius
+vec4 spheres[NUM_SPHERES]; // xyz: center coords; w: radius
+
 
 // Sfera cromata perfetta
 const float reflectionAmount = .88;
@@ -81,11 +93,6 @@ bool rayHit(vec3 rayOrigin, vec3 rayDir, int depth, out int sphereNo, out vec3 r
   return false;
 }
 
-// 0: nessuna riflessione mutipla, solo il cielo
-// 1: riflessioni ricorsive (non funziona ancora)
-// Qualsiasi altro valore: una sola riflessione
-#define RECURSE_REFLECTIONS 1
-
 vec4 calcShading(vec3 origin, vec3 direction) {
 
   int sphereNo = -1;
@@ -143,6 +150,13 @@ vec4 calcShading(vec3 origin, vec3 direction) {
   return ptColor;
 }
 
+void worldMoveObjects(){
+  for(int i=0; i<NUM_SPHERES; i++){
+    vec4 center = u_matrix * vec4(u_spheres[i].xyz,1.);
+    spheres[i] = vec4(center.xyz, u_spheres[i].w);
+  }
+}
+
 void main() {
   // https://raytracing.github.io/books/RayTracingInOneWeekend.html#rays,asimplecamera,andbackground/sendingraysintothescene
   float aspect = u_resolution.x / u_resolution.y;
@@ -156,6 +170,8 @@ void main() {
   vec2 screenCoord = gl_FragCoord.xy / u_resolution;
 
   vec3 rayDir = lower_left + screenCoord.x * right + screenCoord.y * high - origin;
+
+  worldMoveObjects();
 
   outColor = calcShading(origin, rayDir);
 }

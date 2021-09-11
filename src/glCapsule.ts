@@ -8,6 +8,7 @@ export abstract class glCapsule {
   protected vao: any;
   private lastMilliseconds = 0;
   private fps = 0;
+  private fpsContainer = document.getElementById("fps");
 
   abstract run(): void;
   abstract drawScene(milliseconds: number): void;
@@ -119,12 +120,18 @@ export abstract class glCapsule {
 
   updateFps(milliseconds: number) {
     // console.debug("updateFps(%d)", milliseconds);
-    if (milliseconds - this.lastMilliseconds >= 1000) {
-      document.getElementById("fps").innerHTML = (this.fps+1).toString();
+    if (milliseconds - this.lastMilliseconds >= 1000 && !!this.fpsContainer) {
+      this.fpsContainer.innerHTML = (this.fps+1).toString();
       this.lastMilliseconds = milliseconds;
       this.fps = 0;
     } else {
       this.fps++;
     }
+  }
+
+  // Shortcut
+  drawSceneWithFps(milliseconds:number){
+    this.drawScene(milliseconds);
+    this.updateFps(milliseconds);
   }
 }

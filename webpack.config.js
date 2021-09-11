@@ -9,7 +9,6 @@ module.exports = {
     pointcloud: "./src/pointcloud.ts",
     raytracer: "./src/raytracer.ts",
     pointsprites: "./src/pointsprites.ts",
-    raymarcher: "./src/raymarcher.ts",
   },
   devtool: "inline-source-map",
   devServer: {

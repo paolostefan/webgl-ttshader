@@ -51,8 +51,7 @@ export class Pointcloud extends glCapsule {
     this.gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
 
     window.requestAnimationFrame((m) => {
-      this.drawScene(m);
-      this.updateFps(m);
+      this.drawSceneWithFps(m);
     });
   }
 

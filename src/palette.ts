@@ -7,18 +7,7 @@ import fragmentShaderSrc from "./shaders/palette.glsl";
  */
 
 export class Palette extends glCapsule {
-parameters = {
-    a: { r: 0.55, g: 0.4, b: 0.23 },
-    b: { r: 0.44, g: 0.58, b: 0.77 },
-    c: { r: 2.1, g: 2.9, b: 2.2 },
-    d: { r: 0.44, g: 0.52, b: 0.92 },
-    };
-    
-    // Altri valori interessanti
-    // a: { r: 0.17, g: 0.5, b: 0.5 },
-    // b: { r: 0.83, g: 0.5, b: 0.5 },
-    // c: { r: 6, g: 5.4, b: 2.2 },
-    // d: { r: 0.46, g: 0.68, b: 0.98 },
+  
 
   drawScene(milliseconds: number) {
     const primitiveType = this.gl.TRIANGLES;
@@ -79,6 +68,19 @@ parameters = {
 
   run() {
     console.time("Init successful");
+    
+    this.parameters = {
+      a: { r: 0.55, g: 0.4, b: 0.23 },
+      b: { r: 0.44, g: 0.58, b: 0.77 },
+      c: { r: 2.1, g: 2.9, b: 2.2 },
+      d: { r: 0.44, g: 0.52, b: 0.92 },
+    };
+  
+    // Altri valori interessanti
+    // a: { r: 0.17, g: 0.5, b: 0.5 },
+    // b: { r: 0.83, g: 0.5, b: 0.5 },
+    // c: { r: 6, g: 5.4, b: 2.2 },
+    // d: { r: 0.46, g: 0.68, b: 0.98 },
 
     const vertexShaderSrc = `#version 300 es
     in vec4 a_position;
@@ -135,7 +137,6 @@ parameters = {
 
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
-
     this.drawScene(0);
 
     // Starting bind of uniform vars
@@ -168,13 +169,13 @@ parameters = {
 
     const folderC = gui.addFolder("c");
     folderC
-      .add(this.parameters.c, "r", 0, 10, .1)
+      .add(this.parameters.c, "r", 0, 10, 0.1)
       .onChange(this.updateUniform3f("c"));
     folderC
-      .add(this.parameters.c, "g", 0, 10, .1)
+      .add(this.parameters.c, "g", 0, 10, 0.1)
       .onChange(this.updateUniform3f("c"));
     folderC
-      .add(this.parameters.c, "b", 0, 10, .1)
+      .add(this.parameters.c, "b", 0, 10, 0.1)
       .onChange(this.updateUniform3f("c"));
 
     const folderD = gui.addFolder("d");
@@ -197,7 +198,7 @@ parameters = {
     console.timeEnd("Init successful");
   }
 
-  updateUniform3f(name: string) {
+  updateUniform3f(name: any) {
     return () => {
       this.gl.uniform3f(
         this.uniformLoc(name),
