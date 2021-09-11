@@ -10,6 +10,8 @@ export abstract class glCapsule {
   private fps = 0;
   private fpsContainer = document.getElementById("fps");
 
+  protected paused:boolean;
+
   abstract run(): void;
   abstract drawScene(milliseconds: number): void;
 
@@ -134,4 +136,9 @@ export abstract class glCapsule {
     this.drawScene(milliseconds);
     this.updateFps(milliseconds);
   }
+
+  pause(p:boolean){
+    this.paused = p;
+  }
+
 }
