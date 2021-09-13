@@ -63,6 +63,9 @@ export abstract class glCapsule {
     return shader;
   }
 
+  /**
+   * Utile come callback di gui.onChange
+   */
   updateUniform1f(name: string) {
     return (value: number) => {
       this.gl.uniform1f(this.uniformLoc(name), value);
@@ -86,6 +89,15 @@ export abstract class glCapsule {
         this.parameters[name].x,
         this.parameters[name].y,
         this.parameters[name].z
+      );
+    };
+  }
+  
+  updateBooleanUniform(name: string) {
+    return (value:boolean) => {
+      this.gl.uniform1i(
+        this.uniformLoc(name),
+        !!value? 1:0
       );
     };
   }

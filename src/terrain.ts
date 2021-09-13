@@ -1,28 +1,20 @@
 import * as dat from "dat.gui";
 import { glCapsule } from "./glCapsule";
 import fragmentShaderSrc from "./shaders/terrain.glsl";
-import { mat4, vec3 } from "gl-matrix";
+import { mat4 } from "gl-matrix";
 
 /**
  * Terrain Ray Marcher
  */
 export class Terrain extends glCapsule {
-  cameraMatrix: mat4 = mat4.create();
+  
+  public debugTex: WebGLTexture;
 
   drawScene(milliseconds: number) {
     if (!this.paused) {
       const primitiveType = this.gl.TRIANGLES;
       const offset = 0;
       const count = 6;
-
-      let m = mat4.create();
-
-      m = mat4.translate(m, m, vec3.fromValues(0, 0, -4));
-      let mc = mat4.create();
-      console.log(mat4.lookAt(mc, [0, 3, 0], [0, 0, -3], [0, 1, 0]));
-      // m = mat4.rotateX(m, m, (Math.PI/6)*Math.sin(milliseconds/1000));
-
-      this.cameraMatrix = m;
 
       this.gl.clearColor(0, 0, 0, 1);
       this.gl.clear(this.gl.COLOR_BUFFER_BIT);
@@ -42,17 +34,26 @@ export class Terrain extends glCapsule {
    * Assegna i valori alle variabili Uniform utilizzate dallo shader
    */
   bindUniforms(milliseconds: number) {
-    this.gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
-    this.gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
+    const gl = this.gl;
+    gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
+    gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
 
-    this.gl.uniform2f(
+    gl.uniform2f(
       this.uniformLoc("u_resolution"),
       this.canvas.width,
       this.canvas.height
     );
 
-    this.gl.uniform3f(this.uniformLoc("u_lookfrom"),30 + Math.cos(milliseconds/3000), 6, 4*Math.sin(milliseconds/3000));
-    this.gl.uniform3f(this.uniformLoc("u_lookat"), 0, 0, 0);
+    gl.uniform3f(
+      this.uniformLoc("u_lookfrom"),
+      30 + Math.cos(milliseconds / 3000),
+      6,
+      4 * Math.sin(milliseconds / 3000)
+    );
+    gl.uniform3f(this.uniformLoc("u_lookat"), 0, 0, 0);
+
+    // // Tell the shader to get the texture from texture unit 0
+    // gl.uniform1i(this.uniformLoc("u_debugTx"), 0);
   }
 
   run() {
@@ -114,17 +115,11 @@ export class Terrain extends glCapsule {
     this.parameters = {
       fullscreen: false,
       pause: false,
+      debugRaymarch: false,
+      debugHit: false,
     };
 
-    // Altri valori interessanti
-    // res: {
-    //   vside: 0.176,
-    //   lower_left: { x: -0.681, y: -0.711 },
-    // },
-    // a: { x: 0.17, y: 0.5, z: 0.5 },
-    // b: { x: 0.83, y: 0.5, z: 0.5 },
-    // c: { x: 6, y: 5.4, z: 2.2 },
-    // d: { x: 0.46, y: 0.68, z: 0.98 },
+    // this.createDebugTexture();
 
     this.drawScene(0);
 
@@ -136,6 +131,8 @@ export class Terrain extends glCapsule {
       .onChange(this.toggleFullscreen.bind(this));
 
     gui.add(this.parameters, "pause").onChange(this.pause.bind(this));
+    gui.add(this.parameters, "debugRaymarch").onChange(this.updateBooleanUniform("u_debug_raymarch"));
+    gui.add(this.parameters, "debugHit").onChange(this.updateBooleanUniform("u_debug_hit"));
 
     // const folderA = gui.addFolder("a");
     // folderA
@@ -153,4 +150,29 @@ export class Terrain extends glCapsule {
     this.drawScene(0);
     console.timeEnd("Init successful");
   }
+
+  // Standby in attesa di capire se e come usare glFramebuffer
+  // createDebugTexture() {
+  //   const gl = this.gl;
+  //   this.debugTex = gl.createTexture();
+  //   gl.bindTexture(gl.TEXTURE_2D, this.debugTex);
+
+  //   // Facciamo in modo di non usare mipmaps
+  //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+  //   gl.texImage2D(
+  //     gl.TEXTURE_2D,
+  //     0, // mipLevel
+  //     gl.LUMINANCE, // internalFormat
+  //     this.canvas.clientWidth, // width
+  //     this.canvas.clientHeight, // height
+  //     0, // border
+  //     gl.LUMINANCE, // srcFormat
+  //     gl.UNSIGNED_BYTE, //
+  //     new Uint8Array(this.canvas.clientWidth * this.canvas.clientHeight)
+  //   );
+  // }
 }
