@@ -1,14 +1,17 @@
 import * as dat from "dat.gui";
 import { glCapsule } from "./glCapsule";
-import fragmentShaderSrc from "./shaders/terrain.glsl";
-import { mat4 } from "gl-matrix";
+import fragmentShaderSrc from "./shaders/noise.glsl";
 
 /**
- * Terrain Ray Marcher
+ * Noise generator
  */
-export class Terrain extends glCapsule {
-  
-  // public debugTex: WebGLTexture;
+export class Noise extends glCapsule {
+  parameters = {
+    fullscreen: false,
+    pause: false,
+    debugRandom: true,
+    scale: 20.0,
+  };
 
   drawScene(milliseconds: number) {
     if (!this.paused) {
@@ -37,23 +40,17 @@ export class Terrain extends glCapsule {
     const gl = this.gl;
     gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
     gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
+    gl.uniform1f(this.uniformLoc("u_scale"), this.parameters.scale);
+    gl.uniform1i(
+      this.uniformLoc("u_debug_random"),
+      this.parameters.debugRandom ? 1 : 0
+    );
 
     gl.uniform2f(
       this.uniformLoc("u_resolution"),
       this.canvas.width,
       this.canvas.height
     );
-
-    gl.uniform3f(
-      this.uniformLoc("u_lookfrom"),
-      30 + 7*Math.cos(milliseconds / 3000),
-      6,
-      4 * Math.sin(milliseconds / 3000)
-    );
-    gl.uniform3f(this.uniformLoc("u_lookat"), 0, 0, 0);
-
-    // // Tell the shader to get the texture from texture unit 0
-    // gl.uniform1i(this.uniformLoc("u_debugTx"), 0);
   }
 
   run() {
@@ -112,27 +109,17 @@ export class Terrain extends glCapsule {
     );
 
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    this.parameters = {
-      fullscreen: false,
-      pause: false,
-      debugRaymarch: false,
-      debugHit: false,
-    };
-
-    // this.createDebugTexture();
-
-    this.drawScene(0);
 
     // Dat.gui
-    const gui = new dat.GUI({ name: "Terrain" });
+    const gui = new dat.GUI({ name: "Noise" });
 
     gui
       .add(this.parameters, "fullscreen")
       .onChange(this.toggleFullscreen.bind(this));
 
     gui.add(this.parameters, "pause").onChange(this.pause.bind(this));
-    gui.add(this.parameters, "debugRaymarch").onChange(this.updateBooleanUniform("u_debug_raymarch"));
-    gui.add(this.parameters, "debugHit").onChange(this.updateBooleanUniform("u_debug_hit"));
+    gui.add(this.parameters, "debugRandom");
+    gui.add(this.parameters, "scale", 1.5, 90, 0.1); //.onChange(this.updateUniform1f("u_scale"));
 
     // const folderA = gui.addFolder("a");
     // folderA
@@ -150,29 +137,4 @@ export class Terrain extends glCapsule {
     this.drawScene(0);
     console.timeEnd("Init successful");
   }
-
-  // Standby in attesa di capire se e come usare glFramebuffer
-  // createDebugTexture() {
-  //   const gl = this.gl;
-  //   this.debugTex = gl.createTexture();
-  //   gl.bindTexture(gl.TEXTURE_2D, this.debugTex);
-
-  //   // Facciamo in modo di non usare mipmaps
-  //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-  //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-  //   gl.texImage2D(
-  //     gl.TEXTURE_2D,
-  //     0, // mipLevel
-  //     gl.LUMINANCE, // internalFormat
-  //     this.canvas.clientWidth, // width
-  //     this.canvas.clientHeight, // height
-  //     0, // border
-  //     gl.LUMINANCE, // srcFormat
-  //     gl.UNSIGNED_BYTE, //
-  //     new Uint8Array(this.canvas.clientWidth * this.canvas.clientHeight)
-  //   );
-  // }
 }

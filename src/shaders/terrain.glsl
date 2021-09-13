@@ -43,6 +43,10 @@ vec4 sky(vec3 direction) {
   return vec4(normal.y >= 0.0 ? mix(horizonColor, zenitColor, normal.y) : mix(horizonColor, nadirColor, -normal.y), 1);
 }
 
+float random(vec2 st) {
+  return fract(sin(dot(st, vec2(12.41811, 78.131)))*73124.173123);
+}
+
 float terrain(vec2 pt) {
   return terrainLevel + terrainNoiseAmp * sin(pt.x) * sin(pt.y);
 }
@@ -52,7 +56,7 @@ float terrain(vec2 pt) {
 vec3 terrainNormal(vec2 pt) {
   #if USE_CENTRAL_DIFFERENCES
 
-  const float epsilon = 0.01;
+  const float epsilon = 0.001;
   return normalize(vec3(terrain(vec2(pt.x + epsilon, pt.y)) - terrain(vec2(pt.x - epsilon, pt.y)), 2. * epsilon, terrain(vec2(pt.x, pt.y + epsilon)) - terrain(vec2(pt.x, pt.y - epsilon))));
 
   #else
@@ -83,7 +87,7 @@ bool rayHit(vec3 rayOrigin, vec3 rayDir, out float t, out float rayMarchSteps) {
       return true;
     }
 
-    if(++rayMarchSteps > MAX_RAYMARCH){
+    if(++rayMarchSteps > MAX_RAYMARCH) {
       break;
     }
   }
@@ -91,9 +95,8 @@ bool rayHit(vec3 rayOrigin, vec3 rayDir, out float t, out float rayMarchSteps) {
   return false;
 }
 
-
 // Fattore di attenuazione dell'Ambient Occlusion
-const float AOfactor = .2;
+const float AOfactor = .3;
 
 vec4 calcShading(vec3 origin, vec3 direction) {
 
@@ -104,21 +107,20 @@ vec4 calcShading(vec3 origin, vec3 direction) {
     return sky(direction);
   }
 
-  if(u_debug_raymarch!=0){
+  if(u_debug_raymarch != 0) {
     // Mostra il "numero" di passi in rosso
     return vec4(pow(steps / MAX_RAYMARCH, 2.), 0., 0., 1.);
   }
 
-  if(u_debug_hit!=0){
+  if(u_debug_hit != 0) {
     return vec4(0., 1., 0., 1.);
   }
-  
+
   vec3 normal = terrainNormal((origin + direction * t).xz);
   float lambert = dot(normal, sunDirection);
   vec4 color = lambert >= .0 ? vec4(lambert * baseColor.xyz, 1) : vec4(vec3(0), 1);
-  
-  color = color + AOfactor * sky(normal);
-  return color;
+
+  return max(color, AOfactor * sky(normal));
 }
 
 // void worldMoveObjects(){
