@@ -18,8 +18,14 @@ uniform int u_debug_random;
 uniform float u_seed; // Valore sghembo sotto i 1000
 uniform float u_phase; // 0 <-> 2PI
 
+/**
+ * - 1 sin() call
+ * - 1 mod() call
+ * - 2 multiplications
+ * - 4 add/sub
+ */
 float random(vec2 st) {
-    return fract(sin(u_phase + mod(u_seed*st.x*st.y, u_seed*10.))*u_seed);
+    return fract(sin(u_phase + st.x - st.y + mod((st.x-3.14)*st.y, u_seed))*u_seed);
     // return fract(sin(dot(st, vec2(PI * 3.41811, PI * 21.8431))) * 73124.173123);
 }
 
