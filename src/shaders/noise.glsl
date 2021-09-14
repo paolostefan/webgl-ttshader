@@ -29,7 +29,7 @@ float random(vec2 st) {
     // return fract(sin(dot(st, vec2(PI * 3.41811, PI * 21.8431))) * 73124.173123);
 }
 
-float noise(vec2 st) {
+float valueNoise(vec2 st) {
     vec2 i = floor(st);
     vec2 f = fract(st);
 
@@ -47,10 +47,15 @@ float noise(vec2 st) {
     return mix(q, r, u.y);
 }
 
+vec2 gradientNoise(vec2 st) {
+    vec2 a = sin(st);
+    return a; // fract(sin(u_phase + st.x - st.y + mod((st.x-3.14)*st.y, u_seed))*u_seed);
+}
+
 void main() {
     vec2 screenCoord = u_scale * gl_FragCoord.xy / u_resolution.x;
     vec2 transformedCoords = screenCoord + vec2(u_time/100.);
 
-    float n = u_debug_random == 0 ? noise(transformedCoords) : random(transformedCoords);
+    float n = u_debug_random == 0 ? valueNoise(transformedCoords) : random(transformedCoords);
     outColor = vec4(vec3(n), 1);
 }
