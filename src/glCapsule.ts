@@ -10,7 +10,7 @@ export abstract class glCapsule {
   private fps = 0;
   private fpsContainer = document.getElementById("fps");
 
-  protected paused:boolean;
+  protected paused: boolean;
 
   abstract run(): void;
   abstract drawScene(milliseconds: number): void;
@@ -92,17 +92,15 @@ export abstract class glCapsule {
       );
     };
   }
-  
+
   updateBooleanUniform(name: string) {
-    return (value:boolean) => {
-      this.gl.uniform1i(
-        this.uniformLoc(name),
-        !!value? 1:0
-      );
+    return (value: boolean) => {
+      this.gl.uniform1i(this.uniformLoc(name), !!value ? 1 : 0);
     };
   }
 
   createAndLinkProgram(vertexShader: any, fragmentShader: any) {
+    console.time("WebGL2 program created and linked without errors");
     const prog = this.gl.createProgram();
     this.gl.attachShader(prog, vertexShader);
     this.gl.attachShader(prog, fragmentShader);
@@ -115,7 +113,7 @@ export abstract class glCapsule {
       throw new Error(msg);
     }
 
-    console.log("WebGL2 program created and linked without errors");
+    console.timeEnd("WebGL2 program created and linked without errors");
 
     return prog;
   }
@@ -135,7 +133,7 @@ export abstract class glCapsule {
   updateFps(milliseconds: number) {
     // console.debug("updateFps(%d)", milliseconds);
     if (milliseconds - this.lastMilliseconds >= 1000 && !!this.fpsContainer) {
-      this.fpsContainer.innerHTML = (this.fps+1).toString();
+      this.fpsContainer.innerHTML = (this.fps + 1).toString();
       this.lastMilliseconds = milliseconds;
       this.fps = 0;
     } else {
@@ -144,13 +142,12 @@ export abstract class glCapsule {
   }
 
   // Shortcut
-  drawSceneWithFps(milliseconds:number){
+  drawSceneWithFps(milliseconds: number) {
     this.drawScene(milliseconds);
     this.updateFps(milliseconds);
   }
 
-  pause(p:boolean){
+  pause(p: boolean) {
     this.paused = p;
   }
-
 }

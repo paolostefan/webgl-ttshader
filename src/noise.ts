@@ -9,8 +9,10 @@ export class Noise extends glCapsule {
   parameters = {
     fullscreen: false,
     pause: false,
-    debugRandom: true,
-    scale: 20.0,
+    debugRandom: false,
+    scale: 40.0,
+    seed: 839.2121,
+    phase: Math.PI,
   };
 
   drawScene(milliseconds: number) {
@@ -40,16 +42,18 @@ export class Noise extends glCapsule {
     const gl = this.gl;
     gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
     gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
-    gl.uniform1f(this.uniformLoc("u_scale"), this.parameters.scale);
-    gl.uniform1i(
-      this.uniformLoc("u_debug_random"),
-      this.parameters.debugRandom ? 1 : 0
-    );
-
     gl.uniform2f(
       this.uniformLoc("u_resolution"),
       this.canvas.width,
       this.canvas.height
+    );
+
+    gl.uniform1f(this.uniformLoc("u_scale"), this.parameters.scale);
+    gl.uniform1f(this.uniformLoc("u_seed"), this.parameters.seed);
+    gl.uniform1f(this.uniformLoc("u_phase"), this.parameters.phase);
+    gl.uniform1i(
+      this.uniformLoc("u_debug_random"),
+      this.parameters.debugRandom ? 1 : 0
     );
   }
 
@@ -119,18 +123,9 @@ export class Noise extends glCapsule {
 
     gui.add(this.parameters, "pause").onChange(this.pause.bind(this));
     gui.add(this.parameters, "debugRandom");
-    gui.add(this.parameters, "scale", 1.5, 90, 0.1); //.onChange(this.updateUniform1f("u_scale"));
-
-    // const folderA = gui.addFolder("a");
-    // folderA
-    //   .add(this.parameters.a, "x", 0, 1.0, 0.01)
-    //   .onChange(this.updateUniform3f("a"));
-    // folderA
-    //   .add(this.parameters.a, "y", 0, 1.0, 0.01)
-    //   .onChange(this.updateUniform3f("a"));
-    // folderA
-    //   .add(this.parameters.a, "z", 0, 1.0, 0.01)
-    //   .onChange(this.updateUniform3f("a"));
+    gui.add(this.parameters, "scale", 1, 2000, 0.1);
+    gui.add(this.parameters, "seed", 800.1, 160101, 0.11);
+    gui.add(this.parameters, "phase", 0, 2*Math.PI, 0.03);
 
     gui.open();
 
