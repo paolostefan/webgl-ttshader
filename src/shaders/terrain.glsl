@@ -29,9 +29,11 @@ uniform int u_debug_hit;
 #define MAX_RAYMARCH 450.
 
 const float terrainLevel = .5;
-const float terrainNoiseAmp = 3.5;
+const float terrainNoiseAmp = 4.5;
+// Fattore di attenuazione dell'Ambient Occlusion
+const float AOfactor = .4;
 
-const vec4 baseColor = vec4(0.94, 0.78, 0.42, 1);
+const vec4 baseColor = vec4(0.87, 0.72, 0.4, 1);
 const vec3 sunDirection = normalize(vec3(-1, 1, -.5));
 
 /**
@@ -89,7 +91,14 @@ float gradientNoise(vec2 st) {
 }
 
 float terrain(vec2 pt) {
-  return terrainLevel + terrainNoiseAmp * gradientNoise(pt);
+  pt /= 3.;
+  return terrainLevel + terrainNoiseAmp *(
+     gradientNoise(pt) +
+     .5*gradientNoise(2.*pt) +
+     .25*gradientNoise(4.*pt) +
+     .125*gradientNoise(8.*pt) +
+     .0625*gradientNoise(16.*pt) 
+     );
 }
 
 #define USE_CENTRAL_DIFFERENCES 1
@@ -136,8 +145,7 @@ bool rayHit(vec3 rayOrigin, vec3 rayDir, out float t, out float rayMarchSteps) {
   return false;
 }
 
-// Fattore di attenuazione dell'Ambient Occlusion
-const float AOfactor = .3;
+
 
 vec4 calcShading(vec3 origin, vec3 direction) {
 
@@ -161,7 +169,7 @@ vec4 calcShading(vec3 origin, vec3 direction) {
   float lambert = dot(normal, sunDirection);
   vec4 color = lambert >= .0 ? vec4(lambert * baseColor.xyz, 1) : vec4(vec3(0), 1);
 
-  return max(color, AOfactor * sky(normal));
+  return color + AOfactor * sky(normal);
 }
 
 void main() {
