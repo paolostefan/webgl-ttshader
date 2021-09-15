@@ -1,6 +1,6 @@
 {
   "name": "webgl-ttshader",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Boilerplate for WebGL shader",
   "private": true,
   "scripts": {

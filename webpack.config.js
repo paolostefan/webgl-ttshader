@@ -5,10 +5,6 @@ module.exports = {
   mode: "development",
   entry: {
     index: "./src/index.ts",
-    mandelbrot: "./src/mandelbrot.ts",
-    pointcloud: "./src/pointcloud.ts",
-    raytracer: "./src/raytracer.ts",
-    pointsprites: "./src/pointsprites.ts",
   },
   devtool: "inline-source-map",
   devServer: {
