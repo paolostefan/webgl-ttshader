@@ -8,15 +8,15 @@ import { mat4, vec3 } from "gl-matrix";
  */
 
 export class Raytracer extends glCapsule {
+  parameters = {
+    fullscreen: false,
+    antialiasing: false,
+  };
 
   // Elenco degli oggetti nella scena
   readonly spheres = [
-     1,  1,   0, .5,
-     1, -1,   0, .66,
-    -1,  1,   0, .6,
-    -1, -1,   0, .37,
-     0,  0,  .5, .1,
-     0, -2, -3.5, 1,
+    1, 1, 0, 0.5, 1, -1, 0, 0.66, -1, 1, 0, 0.6, -1, -1, 0, 0.37, 0, 0, 0.5,
+    0.1, 0, -2, -3.5, 1,
   ];
 
   transformMatrix: mat4 = mat4.create();
@@ -27,13 +27,13 @@ export class Raytracer extends glCapsule {
     const count = 6;
 
     let m = mat4.create();
-    m = mat4.translate(m, m, vec3.fromValues(0,0,-4));
-    m = mat4.rotateY(m, m, milliseconds/2873);
-    m = mat4.rotateX(m, m, milliseconds/3501);
+    m = mat4.translate(m, m, vec3.fromValues(0, 0, -4));
+    m = mat4.rotateY(m, m, milliseconds / 2873);
+    m = mat4.rotateX(m, m, milliseconds / 3501);
 
-    const scale = 1+.3*Math.cos(milliseconds/1977);
+    const scale = 1 + 0.3 * Math.cos(milliseconds / 1977);
     m = mat4.scale(m, m, vec3.fromValues(scale, scale, scale));
-    
+
     this.transformMatrix = m;
 
     this.gl.clearColor(0, 0, 0, 1);
@@ -52,10 +52,10 @@ export class Raytracer extends glCapsule {
 
   /**
    * Assegna i valori iniziali alle variabili Uniform utilizzate dallo shader
+   * NB: u_mouse viene aggiornata dalla classe madre glCapsule
    */
-  bindUniforms(milliseconds:number) {
+  bindUniforms(milliseconds: number) {
     this.gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
-    this.gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
 
     this.gl.uniform2f(
       this.uniformLoc("u_resolution"),
@@ -71,9 +71,14 @@ export class Raytracer extends glCapsule {
     );
 
     this.gl.uniformMatrix4fv(
-      this.uniformLoc('u_matrix'),
+      this.uniformLoc("u_matrix"),
       false,
       this.transformMatrix
+    );
+
+    this.gl.uniform1i(
+      this.uniformLoc("u_antialiasing"),
+      this.parameters.antialiasing ? 1 : 0
     );
   }
 
@@ -132,9 +137,6 @@ export class Raytracer extends glCapsule {
     );
 
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    this.parameters = {
-      fullscreen: false,
-    };
 
     // Altri valori interessanti
     // res: {
@@ -154,6 +156,8 @@ export class Raytracer extends glCapsule {
     gui
       .add(this.parameters, "fullscreen")
       .onChange(this.toggleFullscreen.bind(this));
+
+    gui.add(this.parameters, "antialiasing");
 
     // const folderA = gui.addFolder("a");
     // folderA

@@ -1,14 +1,11 @@
 import * as dat from "dat.gui";
 import { glCapsule } from "./glCapsule";
 import fragmentShaderSrc from "./shaders/terrain.glsl";
-import { mat4 } from "gl-matrix";
 
 /**
  * Terrain Ray Marcher
  */
 export class Terrain extends glCapsule {
-  
-  // public debugTex: WebGLTexture;
 
   drawScene(milliseconds: number) {
     if (!this.paused) {
@@ -37,6 +34,9 @@ export class Terrain extends glCapsule {
     const gl = this.gl;
     gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
     gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
+    
+    gl.uniform1f(this.uniformLoc("u_seed"), this.parameters.seed);
+    gl.uniform1f(this.uniformLoc("u_phase"), this.parameters.phase);
 
     gl.uniform2f(
       this.uniformLoc("u_resolution"),
@@ -46,8 +46,8 @@ export class Terrain extends glCapsule {
 
     gl.uniform3f(
       this.uniformLoc("u_lookfrom"),
-      30 + 7*Math.cos(milliseconds / 3000),
-      6,
+      30 + 7 * Math.cos(milliseconds / 3000),
+      10,
       4 * Math.sin(milliseconds / 3000)
     );
     gl.uniform3f(this.uniformLoc("u_lookat"), 0, 0, 0);
@@ -117,6 +117,8 @@ export class Terrain extends glCapsule {
       pause: false,
       debugRaymarch: false,
       debugHit: false,
+      seed: 839.2121,
+      phase: 1.12,
     };
 
     // this.createDebugTexture();
@@ -131,19 +133,15 @@ export class Terrain extends glCapsule {
       .onChange(this.toggleFullscreen.bind(this));
 
     gui.add(this.parameters, "pause").onChange(this.pause.bind(this));
-    gui.add(this.parameters, "debugRaymarch").onChange(this.updateBooleanUniform("u_debug_raymarch"));
-    gui.add(this.parameters, "debugHit").onChange(this.updateBooleanUniform("u_debug_hit"));
+    gui
+      .add(this.parameters, "debugRaymarch")
+      .onChange(this.updateBooleanUniform("u_debug_raymarch"));
+    gui
+      .add(this.parameters, "debugHit")
+      .onChange(this.updateBooleanUniform("u_debug_hit"));
 
-    // const folderA = gui.addFolder("a");
-    // folderA
-    //   .add(this.parameters.a, "x", 0, 1.0, 0.01)
-    //   .onChange(this.updateUniform3f("a"));
-    // folderA
-    //   .add(this.parameters.a, "y", 0, 1.0, 0.01)
-    //   .onChange(this.updateUniform3f("a"));
-    // folderA
-    //   .add(this.parameters.a, "z", 0, 1.0, 0.01)
-    //   .onChange(this.updateUniform3f("a"));
+    gui.add(this.parameters, "seed", 800.1, 160101, 0.11);
+    gui.add(this.parameters, "phase", 0, 2 * Math.PI, 0.03);
 
     gui.open();
 

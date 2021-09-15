@@ -12,12 +12,17 @@ uniform vec2 u_mouse;
 // Matrice di trasformazione del mondo
 uniform mat4 u_matrix;
 
+uniform int u_antialiasing;
+
 #define PI 3.141592653589
 #define VP_HEIGHT 2.0
 #define FOCAL_LENGTH 1.0
 
 // Numero massimo di rimbalzi di un raggio. Sopra questa profondità calcShading restituisce (0,0,0)
-#define MAX_RECURSION 32
+#define MAX_RECURSION 9
+
+// Numero di campioni *per lato* nell'anti-aliasing (il numero di campioni è questo valore al quadrato!)
+#define ANTIALIAS_SQRT_SAMPLES 3
 
 vec3 bounces[MAX_RECURSION];
 vec3 directions[MAX_RECURSION];
@@ -31,9 +36,8 @@ vec3 directions[MAX_RECURSION];
 uniform vec4 u_spheres[NUM_SPHERES]; // xyz: center coords; w: radius
 vec4 spheres[NUM_SPHERES]; // xyz: center coords; w: radius
 
-
-// Sfera cromata perfetta
-const float reflectionAmount = .88;
+// Sfera cromata perfetta con indice di riflessione pari a...
+const float reflectionAmount = .85;
 
 /**
  * Colore del cielo
@@ -128,10 +132,10 @@ vec4 calcShading(vec3 origin, vec3 direction) {
     return vec4(vec3(0.), 1.);
   }
 
-  ptColor = sky(directions[maxBounce--]);
+  ptColor = sky(directions[maxBounce--])*reflectionAmount;
   // svuota la pila 
   for(; maxBounce >= 0; maxBounce--) {
-    ptColor = vec4(ptColor.xyz * reflectionAmount, 1);
+    ptColor = vec4(ptColor.rgb * reflectionAmount, 1);
   }
 #elif RECURSE_REFLECTIONS == 0
   ptColor = vec4(reflectionAmount * sky(reflectionDir).xyz, 1);
@@ -150,9 +154,9 @@ vec4 calcShading(vec3 origin, vec3 direction) {
   return ptColor;
 }
 
-void worldMoveObjects(){
-  for(int i=0; i<NUM_SPHERES; i++){
-    vec4 center = u_matrix * vec4(u_spheres[i].xyz,1.);
+void worldMoveObjects() {
+  for(int i = 0; i < NUM_SPHERES; i++) {
+    vec4 center = u_matrix * vec4(u_spheres[i].xyz, 1.);
     spheres[i] = vec4(center.xyz, u_spheres[i].w);
   }
 }
@@ -162,16 +166,32 @@ void main() {
   float aspect = u_resolution.x / u_resolution.y;
   float vp_width = VP_HEIGHT * aspect;
 
-  vec3 origin = vec3(0, 0, 0);
+  vec3 origin = vec3(u_mouse/u_resolution, 0);
   vec3 right = vec3(vp_width, 0, 0);
   vec3 high = vec3(0, VP_HEIGHT, 0);
   vec3 lower_left = origin - right / 2.0 - high / 2.0 - vec3(0, 0, FOCAL_LENGTH);
 
-  vec2 screenCoord = gl_FragCoord.xy / u_resolution;
-
-  vec3 rayDir = lower_left + screenCoord.x * right + screenCoord.y * high - origin;
-
   worldMoveObjects();
 
-  outColor = calcShading(origin, rayDir);
+  vec2 screenCoord = gl_FragCoord.xy / u_resolution;
+  vec3 rayDir;
+
+  if(u_antialiasing == 0) {
+    rayDir = lower_left + screenCoord.x * right + screenCoord.y * high - origin;
+    outColor = calcShading(origin, rayDir);
+  } else {
+    // Subpixel Antialias
+    outColor = vec4(0);
+    vec2 subpxStep = 1. / (u_resolution * float(ANTIALIAS_SQRT_SAMPLES));
+
+    for(int w = 1; w <= ANTIALIAS_SQRT_SAMPLES; w++) { // x
+      for(int t = 1; t <= ANTIALIAS_SQRT_SAMPLES; t++) { // y
+        vec2 aaCoord = screenCoord + subpxStep * vec2(float(w), float(t));
+        rayDir = lower_left + aaCoord.x * right + aaCoord.y * high - origin;
+        outColor += calcShading(origin, rayDir);
+      }
+    }
+
+    outColor /= float(ANTIALIAS_SQRT_SAMPLES*ANTIALIAS_SQRT_SAMPLES);
+  }
 }

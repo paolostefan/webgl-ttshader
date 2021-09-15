@@ -14,6 +14,9 @@ uniform float u_time;
 // Coordinate in pixel del puntatore
 uniform vec2 u_mouse;
 
+uniform float u_seed; // Valore sghembo, preferibilmente sotto 1000
+uniform float u_phase; // 0 <-> 2¶
+
 // Mostra un gradiente nero (zero step) - rosso (MAX_RAYMARCH) che indica il numero di passi di raymarching eseguiti
 uniform int u_debug_raymarch;
 // Mostra una sagoma verde senza shading dov'è il terreno 
@@ -23,10 +26,10 @@ uniform int u_debug_hit;
 #define VP_HEIGHT 2.0
 #define FOCAL_LENGTH 1.0
 
-#define MAX_RAYMARCH 550.
+#define MAX_RAYMARCH 450.
 
-const float terrainLevel = 0.;
-const float terrainNoiseAmp = .45;
+const float terrainLevel = .5;
+const float terrainNoiseAmp = 3.5;
 
 const vec4 baseColor = vec4(0.94, 0.78, 0.42, 1);
 const vec3 sunDirection = normalize(vec3(-1, 1, -.5));
@@ -43,15 +46,53 @@ vec4 sky(vec3 direction) {
   return vec4(normal.y >= 0.0 ? mix(horizonColor, zenitColor, normal.y) : mix(horizonColor, nadirColor, -normal.y), 1);
 }
 
-float random(vec2 st) {
-  return fract(sin(dot(st, vec2(12.41811, 78.131)))*73124.173123);
+/**
+ * Vettore random a 2 dimensioni
+ * valori dei componenti: fra -1.0 e 1.0
+ */
+vec2 random2(vec2 st) {
+
+    // float nx = fract(sin(u_phase + st.x - st.y + mod(st.x*st.y-PI, u_seed))*u_seed);
+    // float ny = fract(sin((u_phase - st.x)/17.3412121 + st.y + mod(st.y+PI*st.x, u_seed))*u_seed);
+  st = vec2(dot(st, vec2(1.11 * u_seed, -34.19243612121)), dot(st, vec2(-u_seed / PI, 19.030828012002)));
+  return -1.0 + 2.0 * fract(sin(st + vec2(u_phase)) * u_seed * 11.);
+}
+
+/**
+ * Gradient noise interpolato bilinearmente con smoothstep
+ * Restituisce valori fra -1 e 1
+ */
+float gradientNoise(vec2 st) {
+  vec2 i = floor(st);
+  vec2 f = fract(st);
+
+    // Debug: Canton Vicino ;-)
+    // int nearest = (f.x<=.5? 
+    //                 (f.y<=.5? 0:2):
+    //                 (f.y<=.5? 1:3));
+    // f = f - (nearest == 0? vec2(0.,0.): (nearest == 1? vec2(1., .0): (nearest==2?vec2(.0, 1.):vec2(1., 1.))));
+    // return dot(f, corners[nearest]); // fract(sin(u_phase + st.x - st.y + mod((st.x-3.14)*st.y, u_seed))*u_seed);
+
+    // Quattro cantoni
+  float corners[4];
+  corners[0] = dot(random2(i), f);
+  corners[1] = dot(random2(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
+  corners[2] = dot(random2(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0));
+  corners[3] = dot(random2(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
+
+  f = smoothstep(vec2(.0, .0), vec2(1., 1.), f);
+
+    // Bilinear mix
+  float a = mix(corners[0], corners[1], f.x);
+  float b = mix(corners[2], corners[3], f.x);
+  return mix(a, b, f.y);
 }
 
 float terrain(vec2 pt) {
-  return terrainLevel + terrainNoiseAmp * sin(pt.x) * sin(pt.y);
+  return terrainLevel + terrainNoiseAmp * gradientNoise(pt);
 }
 
-#define USE_CENTRAL_DIFFERENCES 0
+#define USE_CENTRAL_DIFFERENCES 1
 
 vec3 terrainNormal(vec2 pt) {
   #if USE_CENTRAL_DIFFERENCES
@@ -74,9 +115,9 @@ vec3 terrainNormal(vec2 pt) {
  */
 bool rayHit(vec3 rayOrigin, vec3 rayDir, out float t, out float rayMarchSteps) {
 
-  const float tMin = 1.;
-  const float tMax = 500.;
-  float dt = .1;
+  const float tMin = 10.;
+  const float tMax = 400.;
+  float dt;
   rayMarchSteps = .0;
 
   // Aumenta il passo dt in funzione della distanza dall'osservatore
@@ -123,18 +164,11 @@ vec4 calcShading(vec3 origin, vec3 direction) {
   return max(color, AOfactor * sky(normal));
 }
 
-// void worldMoveObjects(){
-//   for(int i=0; i<NUM_SPHERES; i++){
-//     vec4 center = u_matrix * vec4(u_spheres[i].xyz,1.);
-//     spheres[i] = vec4(center.xyz, u_spheres[i].w);
-//   }
-// }
-
 void main() {
   float aspect = u_resolution.x / u_resolution.y;
   float vp_width = VP_HEIGHT * aspect;
-
-  vec3 origin = u_lookfrom;
+  vec3 offset = vec3(0., 0., u_time/1000.);
+  vec3 origin = u_lookfrom + offset;
 
   // https://raytracing.github.io/books/RayTracingInOneWeekend.html#positionablecamera
   vec3 w = normalize(u_lookfrom - u_lookat);
@@ -149,5 +183,9 @@ void main() {
 
   vec3 rayDir = normalize(lowerLeft + screenCoord.x * right + screenCoord.y * high - origin);
 
-  outColor = calcShading(origin, rayDir);
+  if(u_debug_raymarch != 0) {
+    outColor = vec4(vec2(1., 1.) + random2(screenCoord*100.), 0., 1.);
+  } else {
+    outColor = calcShading(origin, rayDir);
+  }
 }
