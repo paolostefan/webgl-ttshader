@@ -1,5 +1,5 @@
 import * as dat from "dat.gui";
-import { glCapsule } from "./glCapsule";
+import { glCapsule } from "./abstract/glCapsule";
 import fragmentShaderSrc from "./shaders/terrain.glsl";
 
 /**

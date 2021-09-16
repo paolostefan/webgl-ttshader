@@ -1,6 +1,6 @@
 import * as dat from "dat.gui";
 import { mat4, vec3 } from "gl-matrix";
-import { glCapsule } from "./glCapsule";
+import { glCapsule } from "./abstract/glCapsule";
 import fragmentShaderSrc from "./shaders/pointcloud-fragment.glsl";
 import vertexShaderSrc from "./shaders/pointcloud-vertex.glsl";
 

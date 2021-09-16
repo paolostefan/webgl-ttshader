@@ -1,4 +1,4 @@
-import { glCapsule } from "./glCapsule";
+import { glCapsule } from "./abstract/glCapsule";
 import { Terrain } from "./terrain";
 
 // Init the renderer var with an instance of a glCapsule implementation

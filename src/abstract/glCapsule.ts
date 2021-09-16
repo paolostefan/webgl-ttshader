@@ -1,14 +1,16 @@
 export abstract class glCapsule {
-  public errorContainer: any;
-  protected canvas: any;
-  public gl: WebGL2RenderingContext;
-  public parameters: { [key: string]: any };
+  
+  protected canvas:any = document.getElementById("c");
+  public errorContainer = document.getElementById("errormsg");
+  private fpsContainer = document.getElementById("fps");
 
-  protected program: any;
-  protected vao: any;
+  public gl: WebGL2RenderingContext;
+  protected program: WebGLProgram;
+  protected vao: WebGLVertexArrayObject;
+  
+  public parameters: { [key: string]: any };
   private lastMilliseconds = 0;
   private fps = 0;
-  private fpsContainer = document.getElementById("fps");
 
   protected paused: boolean;
 
@@ -17,8 +19,7 @@ export abstract class glCapsule {
 
   constructor() {
     console.time("Got WebGL2 context");
-    this.errorContainer = document.querySelector("#errormsg");
-    this.canvas = document.querySelector("#c");
+    
     this.gl = this.canvas.getContext("webgl2");
     if (!this.gl) {
       const msg =
