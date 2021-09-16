@@ -1,14 +1,13 @@
 import { glCapsule } from "./glCapsule";
 
-declare const fragmentShaderSrc: string;
+export abstract class glTwoTrianglesCapsule extends glCapsule {
 
-export abstract class gl2TriCapsule extends glCapsule {
-  public init2Tri() {
+  initTwoTriangles(fragmentShaderSrc:string) {
     const vertexShaderSrc = `#version 300 es
     in vec4 a_position;
     
     void main() {
-        gl_Position = a_position;
+        gl_Position = a_position; 
     }
     `;
 
@@ -25,10 +24,6 @@ export abstract class gl2TriCapsule extends glCapsule {
 
     this.program = this.createAndLinkProgram(vertexShader, fragmentShader);
 
-    const positionAttribLocation = this.gl.getAttribLocation(
-      this.program,
-      "a_position"
-    );
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
 
     const positions = [-1, -1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1];
@@ -37,9 +32,14 @@ export abstract class gl2TriCapsule extends glCapsule {
       new Float32Array(positions),
       this.gl.STATIC_DRAW
     );
-    
+
     this.vao = this.gl.createVertexArray();
     this.gl.bindVertexArray(this.vao);
+    
+    const positionAttribLocation = this.gl.getAttribLocation(
+      this.program,
+      "a_position"
+    );
     this.gl.enableVertexAttribArray(positionAttribLocation);
 
     const size = 2; // 2 components per iteration
@@ -57,5 +57,13 @@ export abstract class gl2TriCapsule extends glCapsule {
     );
 
     this.gl.viewport(0, 0, this.canvas.clientWidth, this.canvas.clientHeight);
+  }
+
+  drawTwoTriangles() {
+    const primitiveType = this.gl.TRIANGLES;
+    const offset = 0;
+    const count = 6;
+    this.gl.bindVertexArray(this.vao);
+    this.gl.drawArrays(primitiveType, offset, count);
   }
 }

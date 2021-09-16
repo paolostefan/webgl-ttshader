@@ -1,23 +1,27 @@
 import * as dat from "dat.gui";
 import { glCapsule } from "./abstract/glCapsule";
+import { glTwoTrianglesCapsule } from "./abstract/glTwoTrianglesCapsule";
 import fragmentShaderSrc from "./shaders/terrain.glsl";
 
 /**
  * Terrain Ray Marcher
  */
-export class Terrain extends glCapsule {
+export class Terrain extends glTwoTrianglesCapsule {
+  parameters = {
+    fullscreen: false,
+    pause: false,
+    debugRaymarch: false,
+    debugHit: false,
+    seed: 839.2121,
+    phase: 1.12,
+  };
 
   drawScene(milliseconds: number) {
     if (!this.paused) {
-      const primitiveType = this.gl.TRIANGLES;
-      const offset = 0;
-      const count = 6;
-
       this.gl.clearColor(0, 0, 0, 1);
       this.gl.clear(this.gl.COLOR_BUFFER_BIT);
       this.gl.useProgram(this.program);
-      this.gl.bindVertexArray(this.vao);
-      this.gl.drawArrays(primitiveType, offset, count);
+      this.drawTwoTriangles();
 
       // Aggiorna le variabili uniform
       this.bindUniforms(milliseconds);
@@ -34,9 +38,17 @@ export class Terrain extends glCapsule {
     const gl = this.gl;
     gl.uniform1f(this.uniformLoc("u_time"), milliseconds);
     gl.uniform2f(this.uniformLoc("u_mouse"), 0, 0);
-    
+
     gl.uniform1f(this.uniformLoc("u_seed"), this.parameters.seed);
     gl.uniform1f(this.uniformLoc("u_phase"), this.parameters.phase);
+    gl.uniform1i(
+      this.uniformLoc("u_debug_hit"),
+      this.parameters.debugHit ? 1 : 0
+    );
+    gl.uniform1i(
+      this.uniformLoc("u_debug_raymarch"),
+      this.parameters.debugRaymarch ? 1 : 0
+    );
 
     gl.uniform2f(
       this.uniformLoc("u_resolution"),
@@ -58,95 +70,44 @@ export class Terrain extends glCapsule {
 
   run() {
     console.time("Init successful");
-    const vertexShaderSrc = `#version 300 es
-    in vec4 a_position;
-    
-    void main() {
-        gl_Position = a_position;
-    }
-    `;
-
-    const vertexShader = this.createShader(
-      this.gl.VERTEX_SHADER,
-      vertexShaderSrc
-    );
-    const fragmentShader = this.createShader(
-      this.gl.FRAGMENT_SHADER,
-      fragmentShaderSrc
-    );
-
-    console.log("Created vertex and fragment shaders");
-
-    this.program = this.createAndLinkProgram(vertexShader, fragmentShader);
-
-    const positionAttribLocation = this.gl.getAttribLocation(
-      this.program,
-      "a_position"
-    );
-    const positionBuffer = this.gl.createBuffer();
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-
-    const positions = [-1, -1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1];
-
-    this.gl.bufferData(
-      this.gl.ARRAY_BUFFER,
-      new Float32Array(positions),
-      this.gl.STATIC_DRAW
-    );
-    this.vao = this.gl.createVertexArray();
-    this.gl.bindVertexArray(this.vao);
-    this.gl.enableVertexAttribArray(positionAttribLocation);
-
-    const size = 2; // 2 components per iteration
-    const type = this.gl.FLOAT; // the data is 32bit floats
-    const normalize = false; // don't normalize the data
-    const stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
-    const offset = 0; // start at the beginning of the buffer
-    this.gl.vertexAttribPointer(
-      positionAttribLocation,
-      size,
-      type,
-      normalize,
-      stride,
-      offset
-    );
-
-    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    this.parameters = {
-      fullscreen: false,
-      pause: false,
-      debugRaymarch: false,
-      debugHit: false,
-      seed: 839.2121,
-      phase: 1.12,
-    };
+    this.initTwoTriangles(fragmentShaderSrc);
 
     // this.createDebugTexture();
 
     this.drawScene(0);
 
     // Dat.gui
-    const gui = new dat.GUI({ name: "Terrain" });
-
-    gui
-      .add(this.parameters, "fullscreen")
-      .onChange(this.toggleFullscreen.bind(this));
-
-    gui.add(this.parameters, "pause").onChange(this.pause.bind(this));
-    gui
-      .add(this.parameters, "debugRaymarch")
-      .onChange(this.updateBooleanUniform("u_debug_raymarch"));
-    gui
-      .add(this.parameters, "debugHit")
-      .onChange(this.updateBooleanUniform("u_debug_hit"));
-
-    gui.add(this.parameters, "seed", 800.1, 160101, 0.11);
-    gui.add(this.parameters, "phase", 0, 2 * Math.PI, 0.03);
-
-    gui.open();
+    this.initGUI();
 
     this.drawScene(0);
     console.timeEnd("Init successful");
+  }
+
+  initGUI() {
+    this.gui = new dat.GUI({ name: "Terrain" });
+
+    this.gui.add(this.parameters, "pause").onChange(this.pause.bind(this));
+    this.gui
+      .add(this.parameters, "fullscreen")
+      .onChange(this.toggleFullscreen.bind(this));
+
+    this.gui
+      .add(this.parameters, "debugRaymarch")
+      .onChange(this.updateBooleanUniform("u_debug_raymarch"));
+    this.gui
+      .add(this.parameters, "debugHit")
+      .onChange(this.updateBooleanUniform("u_debug_hit"));
+
+    const folderF = this.gui.addFolder("Fractal params")
+    folderF.add(this.parameters, "seed", 800.1, 160101, 0.11);
+    folderF.add(this.parameters, "phase", 0, 2 * Math.PI, 0.03);
+
+    this.gui.open();
+
+    this.drawScene(0);
+    console.timeEnd("Init successful");
+
+    this.gui.open();
   }
 
   // Standby in attesa di capire se e come usare glFramebuffer

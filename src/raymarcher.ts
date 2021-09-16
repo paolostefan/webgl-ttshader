@@ -1,16 +1,15 @@
 import * as dat from "dat.gui";
-import fragmentShaderSrc from "./shaders/raytracer.glsl";
 import { mat4, vec3 } from "gl-matrix";
-import { gl2TriCapsule } from "./abstract/gl2TriCapsule";
-
+import { glTwoTrianglesCapsule } from "./abstract/glTwoTrianglesCapsule";
+import fragmentShaderSrc from "./shaders/raymarcher.glsl";
 /**
  * Ray marcher implementato "lato fragment shader" usando due triangoli
  */
-
-export class Raytracer extends gl2TriCapsule {
+export class Raymarcher extends glTwoTrianglesCapsule {
   parameters = {
     fullscreen: false,
     antialiasing: false,
+    pause: false,
   };
 
   // Elenco degli oggetti nella scena
@@ -22,10 +21,6 @@ export class Raytracer extends gl2TriCapsule {
   transformMatrix: mat4 = mat4.create();
 
   drawScene(milliseconds: number) {
-    const primitiveType = this.gl.TRIANGLES;
-    const offset = 0;
-    const count = 6;
-
     let m = mat4.create();
     m = mat4.translate(m, m, vec3.fromValues(0, 0, -4));
     m = mat4.rotateY(m, m, milliseconds / 2873);
@@ -39,9 +34,7 @@ export class Raytracer extends gl2TriCapsule {
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     this.gl.useProgram(this.program);
-    this.gl.bindVertexArray(this.vao);
-    this.gl.drawArrays(primitiveType, offset, count);
-
+    this.drawTwoTriangles();
     // Aggiorna le variabili uniform
     this.bindUniforms(milliseconds);
 
@@ -83,28 +76,26 @@ export class Raytracer extends gl2TriCapsule {
   }
 
   run() {
-    
-
-    // Altri valori interessanti
-    // res: {
-    //   vside: 0.176,
-    //   lower_left: { x: -0.681, y: -0.711 },
-    // },
-    // a: { x: 0.17, y: 0.5, z: 0.5 },
-    // b: { x: 0.83, y: 0.5, z: 0.5 },
-    // c: { x: 6, y: 5.4, z: 2.2 },
-    // d: { x: 0.46, y: 0.68, z: 0.98 },
-
+    this.initGUI();
+    this.initTwoTriangles(fragmentShaderSrc);
     this.drawScene(0);
+    window.requestAnimationFrame((milliseconds) => {
+      this.drawScene(milliseconds);
+    });
 
+    console.log("Init successful");
+  }
+
+  initGUI() {
     // Dat.gui
-    const gui = new dat.GUI({ name: "Gianfranco" });
+    this.gui = new dat.GUI({ name: "Gianfranco" });
 
-    gui
+    this.gui
       .add(this.parameters, "fullscreen")
       .onChange(this.toggleFullscreen.bind(this));
 
-    gui.add(this.parameters, "antialiasing");
+    this.gui.add(this.parameters, "antialiasing");
+    this.gui.add(this.parameters, "pause").onChange(this.pause.bind(this));
 
     // const folderA = gui.addFolder("a");
     // folderA
@@ -117,12 +108,6 @@ export class Raytracer extends gl2TriCapsule {
     //   .add(this.parameters.a, "z", 0, 1.0, 0.01)
     //   .onChange(this.updateUniform3f("a"));
 
-    gui.open();
-
-    window.requestAnimationFrame((milliseconds) => {
-      this.drawScene(milliseconds);
-    });
-
-    console.log("Init successful");
+    this.gui.open();
   }
 }

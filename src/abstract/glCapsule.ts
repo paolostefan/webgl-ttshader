@@ -1,3 +1,5 @@
+import * as dat from "dat.gui";
+
 export abstract class glCapsule {
   
   protected canvas:any = document.getElementById("c");
@@ -8,6 +10,8 @@ export abstract class glCapsule {
   protected program: WebGLProgram;
   protected vao: WebGLVertexArrayObject;
   
+  protected gui: dat.GUI;
+
   public parameters: { [key: string]: any };
   private lastMilliseconds = 0;
   private fps = 0;
@@ -150,5 +154,17 @@ export abstract class glCapsule {
 
   pause(p: boolean) {
     this.paused = p;
+  }
+
+  // Override in children classes
+  initGUI(){
+    this.gui = new dat.GUI({ name: "glCapsule" });
+
+    this.gui.add(this.parameters, "pause").onChange(this.pause.bind(this));
+    this.gui
+      .add(this.parameters, "fullscreen")
+      .onChange(this.toggleFullscreen.bind(this));
+
+    this.gui.open();
   }
 }
