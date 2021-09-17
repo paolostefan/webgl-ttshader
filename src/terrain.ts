@@ -16,21 +16,6 @@ export class Terrain extends glTwoTrianglesCapsule {
     phase: 1.12,
   };
 
-  drawScene(milliseconds: number) {
-    if (!this.paused) {
-      this.gl.clearColor(0, 0, 0, 1);
-      this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-      this.gl.useProgram(this.program);
-      this.drawTwoTriangles();
-
-      // Aggiorna le variabili uniform
-      this.bindUniforms(milliseconds);
-    }
-    window.requestAnimationFrame((m) => {
-      this.drawSceneWithFps(m);
-    });
-  }
-
   /**
    * Assegna i valori alle variabili Uniform utilizzate dallo shader
    */
@@ -71,15 +56,8 @@ export class Terrain extends glTwoTrianglesCapsule {
   run() {
     console.time("Init successful");
     this.initTwoTriangles(fragmentShaderSrc);
-
-    // this.createDebugTexture();
-
     this.drawScene(0);
-
-    // Dat.gui
     this.initGUI();
-
-    this.drawScene(0);
     console.timeEnd("Init successful");
   }
 
@@ -98,7 +76,7 @@ export class Terrain extends glTwoTrianglesCapsule {
       .add(this.parameters, "debugHit")
       .onChange(this.updateBooleanUniform("u_debug_hit"));
 
-    const folderF = this.gui.addFolder("Fractal params")
+    const folderF = this.gui.addFolder("Fractal params");
     folderF.add(this.parameters, "seed", 800.1, 160101, 0.11);
     folderF.add(this.parameters, "phase", 0, 2 * Math.PI, 0.03);
 

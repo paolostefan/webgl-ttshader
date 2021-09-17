@@ -1,15 +1,18 @@
 import * as dat from "dat.gui";
 
 export abstract class glCapsule {
-  
-  protected canvas:any = document.getElementById("c");
+  abstract run(): void;
+  abstract drawScene(milliseconds: number): void;
+  abstract bindUniforms(milliseconds: number): void;
+
+  protected canvas: any = document.getElementById("c");
   public errorContainer = document.getElementById("errormsg");
   private fpsContainer = document.getElementById("fps");
 
   public gl: WebGL2RenderingContext;
   protected program: WebGLProgram;
   protected vao: WebGLVertexArrayObject;
-  
+
   protected gui: dat.GUI;
 
   public parameters: { [key: string]: any };
@@ -18,12 +21,9 @@ export abstract class glCapsule {
 
   protected paused: boolean;
 
-  abstract run(): void;
-  abstract drawScene(milliseconds: number): void;
-
   constructor() {
     console.time("Got WebGL2 context");
-    
+
     this.gl = this.canvas.getContext("webgl2");
     if (!this.gl) {
       const msg =
@@ -157,7 +157,7 @@ export abstract class glCapsule {
   }
 
   // Override in children classes
-  initGUI(){
+  initGUI() {
     this.gui = new dat.GUI({ name: "glCapsule" });
 
     this.gui.add(this.parameters, "pause").onChange(this.pause.bind(this));

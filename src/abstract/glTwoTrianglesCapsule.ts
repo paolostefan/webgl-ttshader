@@ -1,8 +1,7 @@
 import { glCapsule } from "./glCapsule";
 
 export abstract class glTwoTrianglesCapsule extends glCapsule {
-
-  initTwoTriangles(fragmentShaderSrc:string) {
+  initTwoTriangles(fragmentShaderSrc: string) {
     const vertexShaderSrc = `#version 300 es
     in vec4 a_position;
     
@@ -35,7 +34,7 @@ export abstract class glTwoTrianglesCapsule extends glCapsule {
 
     this.vao = this.gl.createVertexArray();
     this.gl.bindVertexArray(this.vao);
-    
+
     const positionAttribLocation = this.gl.getAttribLocation(
       this.program,
       "a_position"
@@ -65,5 +64,25 @@ export abstract class glTwoTrianglesCapsule extends glCapsule {
     const count = 6;
     this.gl.bindVertexArray(this.vao);
     this.gl.drawArrays(primitiveType, offset, count);
+  }
+
+  /**
+   * Prototipo di loop
+   * @param milliseconds
+   */
+  drawScene(milliseconds: number) {
+    if (!this.paused) {
+      this.gl.clearColor(0, 0, 0, 1);
+      this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+      this.gl.useProgram(this.program);
+      this.drawTwoTriangles();
+
+      // Aggiorna le variabili uniform
+      this.bindUniforms(milliseconds);
+    }
+
+    window.requestAnimationFrame((m) => {
+      this.drawSceneWithFps(m);
+    });
   }
 }
