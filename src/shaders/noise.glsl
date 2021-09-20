@@ -62,12 +62,12 @@ float valueNoise(vec2 st) {
  * valori dei componenti: fra -1.0 e 1.0
  */
 vec2 random2(vec2 st) {
-    st = vec2(dot(st, vec2(1.3913589, -1.34262121)), dot(st, vec2(-1.8251271, 1.7353121)));
+    st = vec2(dot(st, vec2(31.3913589, -1.34262121)), dot(st, vec2(-1.8251271, 41.7353121)));
     return -1.0 + 2.0 * fract(cos(u_phase + u_seed + st) * 47.535771);
 }
 
 /**
- * Gradient noise interpolato bilinearmente con smoothstep
+ * Gradient noise interpolato bilinearmente con smoothstep o curva quintica
  * Restituisce valori fra -1 e 1
  */
 float gradientNoise(vec2 st) {
@@ -91,7 +91,7 @@ float gradientNoise(vec2 st) {
 
     // f = smoothstep(vec2(.0, .0), vec2(1., 1.), f);
     // Quintic: 6x^5-15x^4+10x^3
-    f = f * f * f * (10. + f * (-15. + 6. * f));
+    f = f * f * f * (f * (6. * f -15.) + 10.);
 
     // Bilinear mix
     float a = mix(corners[0], corners[1], f.x);
